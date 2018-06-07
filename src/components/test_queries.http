@@ -1,1 +1,4 @@
-GET http://localhost:5005/template/what is the population
+GET http://localhost:5005/template/what%20is%20the%20population
+
+###
+GET http://localhost:5005/test

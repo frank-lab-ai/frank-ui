@@ -1,0 +1,3 @@
+.no_input_focus input:focus {
+  border: 0px none #fff !important;
+}
