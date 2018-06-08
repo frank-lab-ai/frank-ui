@@ -1,15 +1,17 @@
 import React, { Component } from 'react';
-import { Button, Grid, Icon, Segment, Form, Accordion, List, Header } from 'semantic-ui-react';
+import { Button, Grid, Icon, Segment, Form, Accordion, List, Header, Statistic, Loader, Dimmer, Label, Tab } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
+import InferenceGraph from './InferenceGraph';
 import '../home.css'
+
 
 class Home extends Component {
   constructor() {
     super();
-    this.state = { query: '', templates:[], activeIndex: 1, alist:{}, alist_string:'', answer:{},}
+    this.state = { query: '', templates:[], activeIndex: 10, alist:{}, alist_string:'', answer:{}, loading: false, answer_returned: false}
     this.templates = [];
     this.queryEx = [
-      "What will be the population of Ghana in 2025?",
+      "What will be the population of Ghana in 2005",
       "What is the capital of Germany?",
       "What is the GDP of the country with the largest female unemployment in Africa?"                  
     ]
@@ -35,6 +37,7 @@ class Home extends Component {
   }
 
   handleRIFQuery(){
+    this.setState({loading: true, answer_returned: false})
     const { alist } = this.state
     console.log(JSON.stringify(alist))
     fetch('http://localhost:9876/query',{
@@ -52,14 +55,14 @@ class Home extends Component {
   }
 
   updateAlistAndTemplates(data){
-    console.log(data)
-    this.setState({templates:data['templates']});
-    this.setState({alist: data['alist'], alist_string: data['alist_string']})
+    // console.log(data)
+    this.setState({});
+    this.setState({templates:data['templates'], alist: data['alist'], alist_string: data['alist_string']})
   }
 
-  displayAnswer(data){
-    console.log(data)
-    this.setState({answer: data})
+  displayAnswer(data){    
+    // console.log(data)
+    this.setState({answer: data, answer_returned: true, loading: false})
   }
 
   render() {
@@ -94,18 +97,15 @@ class Home extends Component {
                       return <option key= {key} value={e.value} />;
                 })}
               </datalist>
+              {/* alist */}
+              { this.state.alist_string !== '' &&
+                <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#6FD5D0', border:'none', color:'white'}}>
+                  {/* <Label color='grey 'attached='top left'>Query Alist</Label> */}
+                    {this.state.alist_string}
+                </Segment>
+              }
               {/* query examples */}
               <Accordion>
-                <Accordion.Title active={activeIndex === 0} index={0} onClick={this.handleAccordionClick}>
-                  <Icon name='dropdown' />
-                  Query Alist
-                </Accordion.Title>
-                <Accordion.Content active={activeIndex === 0}>
-                  <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#6FD5D0', border:'none', color:'white'}}>
-                    {this.state.alist_string}
-                  </Segment>
-                </Accordion.Content>
-
                 <Accordion.Title active={activeIndex === 1} index={1} onClick={this.handleAccordionClick}>
                   <Icon name='dropdown' />
                   See examples of queries
@@ -122,18 +122,66 @@ class Home extends Component {
             <br />
           </div>
         </Segment>
+        
+        
+          <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '15px' }}>
+            <Dimmer active={this.state.loading === true} inverted>
+              <Loader active={this.state.loading === true} inverted inline='centered' content='searching/calculating answer'/>
+            </Dimmer>
 
-        <div style={{ marginLeft: '15px', paddingTop: '30px' }}>
-          <Header>Answer</Header>
-          <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#fff',
-           border:'none', color:'black', maxWidth:'800px'}}>
-              {JSON.stringify(this.state.answer)}
+            <Header>Answer</Header>
+            <Segment style={{borderRadius:'0px', paddingLeft: '20px',
+              background:'#fff',border:'none', color:'black', maxWidth:'800px'}}>
+              <Statistic horizontal>
+                <Statistic.Value>{this.state.answer.answer}</Statistic.Value>
+                <Statistic.Label> +/-{this.state.answer.error_bar}</Statistic.Label>
+              </Statistic>
+              <br/>
+              <Label as='a' small color='orange'>
+                <Icon name='globe' />Sources
+                <Label.Detail>{this.state.answer.sources}</Label.Detail>
+              </Label>
+            
+              <Label as='a' small color='grey'>
+                <Icon name='hourglass end' /> Elapsed Time
+                <Label.Detail>{this.state.answer.elapsed_time}</Label.Detail>
+              </Label>
+
+            </Segment>
+            <Segment style={{borderRadius:'0px', paddingLeft: '20px', 
+              background:'#fff',border:'none', color:'black', maxWidth:'800px'}}>
+              <Header as='h4'>Answer Alist</Header>
+              {JSON.stringify(this.state.answer.alist)}
+            </Segment>
+
+
+
+            <Tab  menu={{ secondary: true, pointing: true }} panes={
+              [
+                { menuItem: 'Trace', render: () =>
+                    <Tab.Pane basic attached={false}>
+                    <Segment basic style={{borderRadius:'0px', background:'transparent',border:'none'}}>
+                      <List divided relaxed>
+                        {this.state.answer_returned ? 
+                        this.state.answer.trace.map((item, index)=>{ return <List.Item>{item}</List.Item>})
+                        : ""}
+                      </List>
+                    </Segment>
+                  </Tab.Pane>
+                },
+                { menuItem: 'Inference Tree', render: () => 
+                  <Tab.Pane basic attached={false}>
+                    <InferenceGraph />
+                  </Tab.Pane>
+                }
+              ]
+            } />
+            
           </Segment>
-          <Grid stackable columns={2}>
-
-          </Grid>
-
-        </div>
+      
+        {/* <div style={{ marginLeft: '15px', paddingTop: '30px' }}>
+        <Loader active inline='centered' />
+        </div> */}
       </div>
     );
   }
