@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Grid, Icon, Segment, Form, Accordion, List, Header, Statistic, Loader, Dimmer, Label, Tab } from 'semantic-ui-react';
-import { Link } from 'react-router-dom';
+import { Button, Icon, Segment, Form, Accordion, List, Header, Statistic, Label, Tab, Image } from 'semantic-ui-react';
 import InferenceGraph from './InferenceGraph';
 import '../home.css'
 
@@ -8,10 +7,12 @@ import '../home.css'
 class Home extends Component {
   constructor() {
     super();
-    this.state = { query: '', templates:[], activeIndex: 10, alist:{}, alist_string:'', answer:{}, loading: false, answer_returned: false}
+    this.state = { query: '', templates:[], activeIndex: 10, alist:{}, alist_string:'', 
+      answer:{}, loading: false, answer_returned: false}
     this.templates = [];
     this.queryEx = [
-      "What will be the population of Ghana in 2005",
+      "What was the gdp of Ghana in 1998?",
+      "What will be the population of Ghana in 2001?",
       "What is the capital of Germany?",
       "What is the GDP of the country with the largest female unemployment in Africa?"                  
     ]
@@ -27,6 +28,17 @@ class Home extends Component {
 
   handleChangeQuery(e) { 
     var queryStr = e.target.value
+    this.getQueryAlist(queryStr)
+  }
+
+  handleExItemClick = (e, listItemProps)=>{
+    const {children} = listItemProps
+    // console.log(children)
+    this.setState({query:children, activeIndex:10}) //change active index to close accordion
+    this.getQueryAlist(children)
+  }
+
+  getQueryAlist(queryStr){
     this.setState({ query: queryStr})
     if(queryStr[queryStr.length-1] === ' ' || queryStr[queryStr.length-1] === '?'){    
       //generate the templates  
@@ -48,15 +60,10 @@ class Home extends Component {
     .then(response => this.displayAnswer(response))
   }
 
-  handleExItemClick = (e, listItemProps)=>{
-    const {children} = listItemProps
-    // console.log(children)
-    this.setState({query:children})
-  }
+  
 
   updateAlistAndTemplates(data){
     // console.log(data)
-    this.setState({});
     this.setState({templates:data['templates'], alist: data['alist'], alist_string: data['alist_string']})
   }
 
@@ -99,7 +106,8 @@ class Home extends Component {
               </datalist>
               {/* alist */}
               { this.state.alist_string !== '' &&
-                <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#6FD5D0', border:'none', color:'white'}}>
+                <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#000000',
+                 border:'none', color:'#fff', fontFamily:'Ubuntu Mono', opacity:'0.5'}}>
                   {/* <Label color='grey 'attached='top left'>Query Alist</Label> */}
                     {this.state.alist_string}
                 </Segment>
@@ -124,12 +132,17 @@ class Home extends Component {
         </Segment>
         
         
-          <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '15px' }}>
-            <Dimmer active={this.state.loading === true} inverted>
-              <Loader active={this.state.loading === true} inverted inline='centered' content='searching/calculating answer'/>
-            </Dimmer>
+        <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '15px',marginTop: '35px' }}>
+          {/* <Dimmer active={this.state.loading === true} inverted> */}
+            {/* <Loader active={this.state.loading === true} inverted inline='centered' content='searching/calculating answer'/> */}
+            {/* <Image src='loading.svg' centered/>
+          </Dimmer> */}
 
-            <Header>Answer</Header>
+          {/* <Header>Answer</Header> */}
+          {this.state.loading && 
+            <Image src='loading.svg' centered/>
+          }
+          {this.state.answer_returned &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px',
               background:'#fff',border:'none', color:'black', maxWidth:'800px'}}>
               <Statistic horizontal>
@@ -137,51 +150,51 @@ class Home extends Component {
                 <Statistic.Label> +/-{this.state.answer.error_bar}</Statistic.Label>
               </Statistic>
               <br/>
-              <Label as='a' small color='orange'>
+              <Label as='a' small='true' color='orange'>
                 <Icon name='globe' />Sources
                 <Label.Detail>{this.state.answer.sources}</Label.Detail>
               </Label>
             
-              <Label as='a' small color='grey'>
+              <Label as='a' small='true' color='grey'>
                 <Icon name='hourglass end' /> Elapsed Time
                 <Label.Detail>{this.state.answer.elapsed_time}</Label.Detail>
               </Label>
 
             </Segment>
+          }
+          
+          {this.state.answer_returned &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px', 
-              background:'#fff',border:'none', color:'black', maxWidth:'800px'}}>
+              background:'#fff',border:'none', color:'black', maxWidth:'800px', fontFamily:'Ubuntu Mono'}}>
               <Header as='h4'>Answer Alist</Header>
               {JSON.stringify(this.state.answer.alist)}
             </Segment>
+          }
 
 
-
-            <Tab  menu={{ secondary: true, pointing: true }} panes={
-              [
-                { menuItem: 'Trace', render: () =>
-                    <Tab.Pane basic attached={false}>
-                    <Segment basic style={{borderRadius:'0px', background:'transparent',border:'none'}}>
-                      <List divided relaxed>
-                        {this.state.answer_returned ? 
-                        this.state.answer.trace.map((item, index)=>{ return <List.Item>{item}</List.Item>})
-                        : ""}
-                      </List>
-                    </Segment>
-                  </Tab.Pane>
-                },
-                { menuItem: 'Inference Tree', render: () => 
+          {this.state.answer_returned &&
+          <Tab menu={{ secondary: true, pointing: true }} panes={
+            [
+              { menuItem: 'Trace', render: () =>
                   <Tab.Pane basic attached={false}>
-                    <InferenceGraph />
-                  </Tab.Pane>
-                }
-              ]
-            } />
-            
-          </Segment>
-      
-        {/* <div style={{ marginLeft: '15px', paddingTop: '30px' }}>
-        <Loader active inline='centered' />
-        </div> */}
+                  <Segment basic style={{borderRadius:'0px', background:'transparent',border:'none', fontFamily:'Ubuntu Mono'}}>
+                    <List divided relaxed size='tiny'>
+                      {this.state.answer_returned ? 
+                      this.state.answer.trace.map((item, index)=>{ return <List.Item key={index} >{item}</List.Item>})
+                      : ""}
+                    </List>
+                  </Segment>
+                </Tab.Pane>
+              },
+              { menuItem: 'Inference Tree', render: () => 
+                <Tab.Pane basic attached={false}>
+                  <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} />
+                </Tab.Pane>
+              }
+            ]
+          } />
+        }
+        </Segment>
       </div>
     );
   }

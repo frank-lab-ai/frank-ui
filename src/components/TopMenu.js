@@ -1,14 +1,11 @@
 import React, { Component } from 'react';
-import {Menu,Item, Icon, Dropdown, Header, Label} from 'semantic-ui-react';
-import {Link, withRouter} from 'react-router-dom';
+import {Menu, Header, Label} from 'semantic-ui-react';
 
 class TopMenu extends Component {
-  state = { activeItem: 'my-projects' }
-
   render() {
-    const { activeItem } = this.state
     return (
-        <Menu stackable color='teal' inverted  secondary style={{borderRadius: '0px', margin: '0px', minHeight:'60px'}}>
+        <Menu stackable color='teal' inverted  secondary 
+                style={{borderRadius: '0px', margin: '0px', minHeight:'60px', background:'#33C3BD'}}>
           <Menu.Item header>
             {/* <Link to='/' style={{color:'#FFFFFF'}}> */}
               <Header as='h2'>FRANK
