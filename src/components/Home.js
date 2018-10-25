@@ -16,6 +16,8 @@ class Home extends Component {
       "What is the capital of Germany?",
       "What is the GDP of the country with the largest female unemployment in Africa?"                  
     ]
+    this.webui_api_endpoint = "http://34.242.204.151:5005";
+    this.frank_server_endpoint = "http://34.242.204.151:9876/query";
   }  
 
   handleAccordionClick = (e, titleProps) => {
@@ -42,7 +44,7 @@ class Home extends Component {
     this.setState({ query: queryStr})
     if(queryStr[queryStr.length-1] === ' ' || queryStr[queryStr.length-1] === '?'){    
       //generate the templates  
-      fetch('http://localhost:5005/template/' + queryStr, {})
+      fetch(this.webui_api_endpoint + '/template/' + queryStr, {})
       .then(result => result.json())
       .then(response => this.updateAlistAndTemplates(response))
     }
@@ -52,7 +54,7 @@ class Home extends Component {
     this.setState({loading: true, answer_returned: false})
     const { alist } = this.state
     console.log(JSON.stringify(alist))
-    fetch('http://localhost:9876/query',{
+    fetch(this.frank_server_endpoint,{
       method: 'POST',
       body: JSON.stringify(alist)
     })
@@ -82,8 +84,8 @@ class Home extends Component {
     
     return (
       <div>
-        <Segment inverted color='teal' secondary style={{ borderRadius: '0px', margin: '0px' }}>
-          <div style={{ maxWidth: '800px' }}>
+        <Segment inverted color='teal' secondary style={{ borderRadius: '0px', margin: '0px'}}>
+          <div style={{ maxWidth: '1000px', marginLeft:'auto', marginRight:'auto'  }}>
             <br />
             <Form>
               <Form.Input className='no_input_focus'
@@ -91,9 +93,9 @@ class Home extends Component {
                 style={whiteBgStyle} size='large' transparent
                 placeholder='Type your query...'
                 action={
-                  <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon labelPosition='left'
+                  <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
                     style={{borderRadius: '0px', marginLeft:'8px'}} size='large'>
-                    <Icon name='search' />Search
+                    <Icon name='search' />
                   </Button>
                 }
                 list='templates'
@@ -144,18 +146,20 @@ class Home extends Component {
           }
           {this.state.answer_returned &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px',
-              background:'#fff',border:'none', color:'black', maxWidth:'800px'}}>
+              background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
               <Statistic horizontal>
                 <Statistic.Value>{this.state.answer.answer}</Statistic.Value>
-                <Statistic.Label> +/-{this.state.answer.error_bar}</Statistic.Label>
+                {parseFloat(this.state.answer.error_bar) > 0 &&
+                  <Statistic.Label style={{marginLeft: '30px'}}> +/-{this.state.answer.error_bar}</Statistic.Label>
+                }
               </Statistic>
               <br/>
-              <Label as='a' small='true' color='orange'>
+              <Label as='a' small='true' color='orange' style={{marginTop: '2px'}}>
                 <Icon name='globe' />Sources
                 <Label.Detail>{this.state.answer.sources}</Label.Detail>
               </Label>
             
-              <Label as='a' small='true' color='grey'>
+              <Label as='a' small='true' color='grey' style={{marginTop: '2px'}}>
                 <Icon name='hourglass end' /> Elapsed Time
                 <Label.Detail>{this.state.answer.elapsed_time}</Label.Detail>
               </Label>
@@ -165,7 +169,7 @@ class Home extends Component {
           
           {this.state.answer_returned &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px', 
-              background:'#fff',border:'none', color:'black', maxWidth:'800px', fontFamily:'Ubuntu Mono'}}>
+              background:'#fff',border:'none', color:'black', maxWidth:'1000px', fontFamily:'Ubuntu Mono', marginLeft:'auto', marginRight:'auto'}}>
               <Header as='h4'>Answer Alist</Header>
               {JSON.stringify(this.state.answer.alist)}
             </Segment>

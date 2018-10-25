@@ -24,7 +24,7 @@ class InferenceGraph extends Component {
 
 
   onClickNode = function(nodeId) {    
-    this.setState({alist_string : JSON.stringify(this.props.nodes.filter(x => x.id === nodeId)[0]) })
+    this.setState({alist_string : "Selected alist: " + JSON.stringify(this.props.nodes.filter(x => x.id === nodeId)[0]) })
   };
 
   render() {  
