@@ -84,8 +84,8 @@ class Home extends Component {
     
     return (
       <div>
-        <Segment inverted color='teal' secondary style={{ borderRadius: '0px', margin: '0px'}}>
-          <div style={{ maxWidth: '1000px', marginLeft:'auto', marginRight:'auto'  }}>
+        <Segment inverted color='teal' secondary style={{ borderRadius: '0px', margin: '0px' }}>
+          <div style={{ maxWidth: '1000px', marginLeft:'auto', marginRight:'auto' }}>
             <br />
             <Form>
               <Form.Input className='no_input_focus'
@@ -110,7 +110,7 @@ class Home extends Component {
               { this.state.alist_string !== '' &&
                 <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#000000',
                  border:'none', color:'#fff', fontFamily:'Ubuntu Mono', opacity:'0.5'}}>
-                  {/* <Label color='grey 'attached='top left'>Query Alist</Label> */}
+                  {/* <Label color='grey 'attached='top left'>Query Alist</Label> */} 
                     {this.state.alist_string}
                 </Segment>
               }
@@ -147,12 +147,22 @@ class Home extends Component {
           {this.state.answer_returned &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px',
               background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
-              <Statistic horizontal>
-                <Statistic.Value>{this.state.answer.answer}</Statistic.Value>
+              <div>
+                <Statistic style={{float:'left', marginRight: '30px'}}>
+                  <Statistic.Value >{this.state.answer.answer}</Statistic.Value>
+                </Statistic>
+                
                 {parseFloat(this.state.answer.error_bar) > 0 &&
-                  <Statistic.Label style={{marginLeft: '30px'}}> +/-{this.state.answer.error_bar}</Statistic.Label>
+                  <Statistic style={{float:'left', marginLeft: '10px', marginTop:'10px'}}>
+                    <Statistic.Label > &plusmn; {this.state.answer.error_bar}</Statistic.Label>
+                  </Statistic>
                 }
-              </Statistic>
+              </div>
+              <div style={{clear: 'both'}} />
+              {/* <Statistic horizontal>
+                
+               
+              </Statistic> */}
               <br/>
               <Label as='a' small='true' color='orange' style={{marginTop: '2px'}}>
                 <Icon name='globe' />Sources
