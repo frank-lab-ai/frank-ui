@@ -12,12 +12,14 @@ class Home extends Component {
     this.templates = [];
     this.queryEx = [
       "What was the gdp of Ghana in 1998?",
-      "What will be the population of Ghana in 2001?",
-      "What is the capital of Germany?",
-      "What is the GDP of the country with the largest female unemployment in Africa?"                  
+      "What will be the population of Ghana in 2026?",
+      "What is the capital of the United Kingdom?",
+      "What is the GDP of the country in Africa with the largest unemployment in 2010?",
+      "country in Europe with the lowest population in 2010"                  
     ]
-    this.webui_api_endpoint = "http://34.242.204.151:5005";
-    this.frank_server_endpoint = "http://34.242.204.151:9876/query";
+    this.server_host = "localhost"; //"34.242.204.151";
+    this.webui_api_endpoint = "http://" + this.server_host + ":5002";
+    this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
   }  
 
   handleAccordionClick = (e, titleProps) => {
@@ -32,6 +34,11 @@ class Home extends Component {
     var queryStr = e.target.value
     this.getQueryAlist(queryStr)
   }
+
+  handleAlistChange(e) { 
+    this.setState({alist_string: e.target.value})    
+  }
+
 
   handleExItemClick = (e, listItemProps)=>{
     const {children} = listItemProps
@@ -66,7 +73,7 @@ class Home extends Component {
 
   updateAlistAndTemplates(data){
     // console.log(data)
-    this.setState({templates:data['templates'], alist: data['alist'], alist_string: data['alist_string']})
+    this.setState({template:data['template'], alist: data['alist'], alist_string: data['alist_string'], question: data['question']})
   }
 
   displayAnswer(data){    
@@ -76,6 +83,8 @@ class Home extends Component {
 
   render() {
     var whiteBgStyle = { borderRadius: '0px', background: 'white', padding:'5px'}
+    var alistBgStyle = { borderRadius:'0px', padding:'5px', background:'#E7E9EC',
+                          border:'none', color:'#fff', fontFamily:'Ubuntu Mono'}
     const { activeIndex } = this.state
     
     const exlistItems = this.queryEx.map((ex, index)=>
@@ -101,19 +110,33 @@ class Home extends Component {
                 list='templates'
                 onChange={this.handleChangeQuery.bind(this)}
               />
-              <datalist id='templates'>
+
+              <Form.Input className='alist_input'
+                value={this.state.alist_string}
+                size='large' transparent
+                placeholder='translated alist ...'
+                action={
+                  <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
+                    style={{borderRadius: '0px', marginLeft:'8px'}} size='large'>
+                    <Icon name='search' />
+                  </Button>
+                }
+                onChange={this.handleAlistChange.bind(this)}
+              />
+
+              {/* <datalist id='templates'>
                 {this.state.templates.map((e, key) => {
                       return <option key= {key} value={e.value} />;
                 })}
-              </datalist>
+              </datalist> */}
               {/* alist */}
-              { this.state.alist_string !== '' &&
+              {/* { this.state.alist_string !== '' &&
                 <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#000000',
                  border:'none', color:'#fff', fontFamily:'Ubuntu Mono', opacity:'0.5'}}>
-                  {/* <Label color='grey 'attached='top left'>Query Alist</Label> */} 
+                  
                     {this.state.alist_string}
                 </Segment>
-              }
+              } */}
               {/* query examples */}
               <Accordion>
                 <Accordion.Title active={activeIndex === 1} index={1} onClick={this.handleAccordionClick}>
