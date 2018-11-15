@@ -6,7 +6,8 @@
   border: 0px none #fff !important;
   border-radius:0px  !important;
   padding:5px !important;
-  background:rgb(0, 148, 141)  !important;
-  color:#000  !important;
+  background:rgb(196, 255, 252)  !important;
+  /* color:#000  !important; */
   font-family: ubuntu-mono  !important;
+  color: #fff !important;
 }

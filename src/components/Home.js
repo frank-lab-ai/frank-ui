@@ -17,7 +17,7 @@ class Home extends Component {
       "What is the GDP of the country in Africa with the largest unemployment in 2010?",
       "country in Europe with the lowest population in 2010"                  
     ]
-    this.server_host = "localhost"; //"34.242.204.151";
+    this.server_host = "34.242.204.151"; //;"localhost"
     this.webui_api_endpoint = "http://" + this.server_host + ":5002";
     this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
   }  
@@ -32,11 +32,21 @@ class Home extends Component {
 
   handleChangeQuery(e) { 
     var queryStr = e.target.value
-    this.getQueryAlist(queryStr)
+    this.setState({ query: queryStr})
+    //this.getQueryAlist()
   }
 
   handleAlistChange(e) { 
-    this.setState({alist_string: e.target.value})    
+    var alist_json = {}
+    try{
+      alist_json=JSON.parse(e.target.value)
+        
+    }
+    catch(e){
+      console.log("Invalid json format")
+    }
+    this.setState({alist_string: e.target.value, alist: alist_json })  
+    
   }
 
 
@@ -44,17 +54,18 @@ class Home extends Component {
     const {children} = listItemProps
     // console.log(children)
     this.setState({query:children, activeIndex:10}) //change active index to close accordion
-    this.getQueryAlist(children)
+    this.getQueryAlist()
   }
 
-  getQueryAlist(queryStr){
-    this.setState({ query: queryStr})
-    if(queryStr[queryStr.length-1] === ' ' || queryStr[queryStr.length-1] === '?'){    
+  getQueryAlist(){
+    var queryStr = this.state.query
+    //if(queryStr[queryStr.length-1] === ' ' || queryStr[queryStr.length-1] === '?'){    
+      console.log("generating")
       //generate the templates  
       fetch(this.webui_api_endpoint + '/template/' + queryStr, {})
       .then(result => result.json())
       .then(response => this.updateAlistAndTemplates(response))
-    }
+    //}
   }
 
   handleRIFQuery(){
@@ -102,9 +113,9 @@ class Home extends Component {
                 style={whiteBgStyle} size='large' transparent
                 placeholder='Type your query...'
                 action={
-                  <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
+                  <Button onClick={this.getQueryAlist.bind(this)} color='orange' icon
                     style={{borderRadius: '0px', marginLeft:'8px'}} size='large'>
-                    <Icon name='search' />
+                    <Icon name='exchange' />
                   </Button>
                 }
                 list='templates'
