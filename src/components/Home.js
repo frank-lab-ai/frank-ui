@@ -14,7 +14,7 @@ class Home extends Component {
       "What was the gdp of Ghana in 1998?",
       "What will be the population of Ghana in 2026?",
       "What is the capital of the United Kingdom?",
-      "What is the GDP of the country in Africa with the largest unemployment in 2010?",
+      "What was the population in 2005 of the country in Africa with the highest gdp in 2010?",
       "country in Europe with the lowest population in 2010"                  
     ]
     this.server_host = "34.242.204.151"; //;"localhost"
