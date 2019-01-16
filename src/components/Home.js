@@ -1,14 +1,16 @@
 import React, { Component } from 'react';
-import { Button, Icon, Segment, Form, Accordion, List, Header, Statistic, Label, Tab, Image } from 'semantic-ui-react';
+import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab, Image, Popup } from 'semantic-ui-react';
+import ReactJson from 'react-json-view';
 import InferenceGraph from './InferenceGraph';
 import '../home.css'
+
 
 
 class Home extends Component {
   constructor() {
     super();
     this.state = { query: '', templates:[], activeIndex: 10, alist:{}, alist_string:'', 
-      answer:{}, loading: false, answer_returned: false}
+      answer:{}, loading: false, answer_returned: false, errorMessage:'', examplesOpen:false}
     this.templates = [];
     this.queryEx = [
       "What was the gdp of Ghana in 1998?",
@@ -17,7 +19,8 @@ class Home extends Component {
       "What was the population in 2005 of the country in Africa with the highest gdp in 2010?",
       "country in Europe with the lowest population in 2010"                  
     ]
-    this.server_host = "34.242.204.151"; //;"localhost"
+    // this.server_host = "34.242.204.151"; //;"localhost"
+    this.server_host = "localhost"; //;"localhost"
     this.webui_api_endpoint = "http://" + this.server_host + ":5005";
     this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
   }  
@@ -27,13 +30,16 @@ class Home extends Component {
     const { activeIndex } = this.state
     const newIndex = activeIndex === index ? -1 : index
 
-    this.setState({ activeIndex: newIndex })
+    this.setState({ activeIndex: newIndex, errorMessage:"" })
   }
 
   handleChangeQuery(e) { 
+    this.setState({errorMessage:""})
     var queryStr = e.target.value
     this.setState({ query: queryStr})
-    //this.getQueryAlist()
+    if(queryStr.trim().length === 0)
+      this.setState({ alist: {}, alist_string:""})
+    this.getQueryAlist(queryStr)
   }
 
   handleAlistChange(e) { 
@@ -53,12 +59,13 @@ class Home extends Component {
   handleExItemClick = (e, listItemProps)=>{
     const {children} = listItemProps
     // console.log(children)
-    this.setState({query:children, activeIndex:10}) //change active index to close accordion
-    this.getQueryAlist()
+    this.setState({query:children, activeIndex:10, examplesOpen:false}) //change active index to close accordion
+    this.getQueryAlist(children)
   }
 
-  getQueryAlist(){
-    var queryStr = this.state.query
+  getQueryAlist(queryStr){
+    if(queryStr.trim().length === 0) return;
+    //var queryStr = this.state.query
     //if(queryStr[queryStr.length-1] === ' ' || queryStr[queryStr.length-1] === '?'){    
       console.log("generating")
       //generate the templates  
@@ -69,6 +76,10 @@ class Home extends Component {
   }
 
   handleRIFQuery(){
+    if(!Object.keys(this.state.alist).length){
+      this.setState({errorMessage:"FRANK was unable to parse your questions. Can you rephrase?"})
+      return;
+    }
     this.setState({loading: true, answer_returned: false})
     const { alist } = this.state
     console.log(JSON.stringify(alist))
@@ -93,82 +104,88 @@ class Home extends Component {
   }
 
   render() {
-    var whiteBgStyle = { borderRadius: '0px', background: 'white', padding:'5px'}
+    var whiteBgStyle = { borderRadius: '0px', background: 'white', padding:'5px', marginBottom:0}
     var alistBgStyle = { borderRadius:'0px', padding:'5px', background:'#E7E9EC',
                           border:'none', color:'#fff', fontFamily:'Ubuntu Mono'}
     const { activeIndex } = this.state
-    
-    const exlistItems = this.queryEx.map((ex, index)=>
-    <List.Item as='a' key={index} onClick={this.handleExItemClick}>{ex}</List.Item>
-    )
+  
     
     return (
       <div>
-        <Segment inverted color='teal' secondary style={{ borderRadius: '0px', margin: '0px' }}>
+        <Segment inverted secondary style={{ borderRadius: '0px', margin: '0px', background:'#2D3142'}}>
           <div style={{ maxWidth: '1000px', marginLeft:'auto', marginRight:'auto' }}>
             <br />
-            <Form>
+            <Label as='a' content='Try these examples' icon='info'
+              onClick={()=>this.setState({examplesOpen:true})} style={{marginBottom:5, float:'right', 
+              background:'#252937', color:'#7B8893'}}/>
+              <div style={{clear:'both'}} />
+            <Form style={{marginBottom:0}}>              
               <Form.Input className='no_input_focus'
                 value={this.state.query}
                 style={whiteBgStyle} size='large' transparent
-                placeholder='Type your query...'
+                placeholder='Type your question...'
                 action={
-                  <Button onClick={this.getQueryAlist.bind(this)} color='orange' icon
-                    style={{borderRadius: '0px', marginLeft:'8px'}} size='large'>
-                    <Icon name='exchange' />
-                  </Button>
+                  <Popup 
+                    trigger={
+                      <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
+                        style={{borderRadius: '0px', marginLeft:'8px'}} size='large'>
+                        <Icon name='search' />
+                      </Button>
+                    }
+                    content={this.state.errorMessage}
+                    open={this.state.errorMessage !== ""}
+                    position='top right' style={{borderRadius:0}} inverted
+                  />
+
                 }
                 list='templates'
                 onChange={this.handleChangeQuery.bind(this)}
-              />
-
-              <Form.Input className='alist_input'
-                value={this.state.alist_string}
-                size='large' transparent
-                placeholder='translated alist ...'
-                action={
-                  <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
-                    style={{borderRadius: '0px', marginLeft:'8px'}} size='large'>
-                    <Icon name='search' />
-                  </Button>
-                }
-                onChange={this.handleAlistChange.bind(this)}
-              />
-
-              {/* <datalist id='templates'>
-                {this.state.templates.map((e, key) => {
-                      return <option key= {key} value={e.value} />;
-                })}
-              </datalist> */}
-              {/* alist */}
-              {/* { this.state.alist_string !== '' &&
-                <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#000000',
-                 border:'none', color:'#fff', fontFamily:'Ubuntu Mono', opacity:'0.5'}}>
-                  
-                    {this.state.alist_string}
-                </Segment>
-              } */}
-              {/* query examples */}
-              <Accordion>
-                <Accordion.Title active={activeIndex === 1} index={1} onClick={this.handleAccordionClick}>
-                  <Icon name='dropdown' />
-                  See examples of queries
-                </Accordion.Title>
-                <Accordion.Content active={activeIndex === 1}>
-                  <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#6FD5D0', border:'none'}}>
-                    <List link >
-                      {exlistItems}
-                    </List>
-                  </Segment>
-                </Accordion.Content>
-              </Accordion>
+              /> 
+              { this.state.query.trim() !== "" &&
+              <div>
+                <div style={{background:'#404353', padding:10, paddingTop:20, marginTop:'-14px'}}>
+                  <p style={{fontSize:13, fontWeight:'700', color:'#A9BAC9'}}>
+                    Generated Alist 
+                    <Popup inverted trigger={
+                      <Icon size='large' color='orange' name='question circle' style={{marginTop:'-5px', marginLeft:'5px'}}/>
+                    } 
+                      content='An alist is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.' />:
+                  </p>
+                  <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p>
+                  <ReactJson src={this.state.alist} theme='monokai' 
+                    displayDataTypes={false} displayObjectSize={false} name={false}
+                    style={{padding:10, background:'#404353'}} />
+                </div>
+              </div>
+              }
             </Form>
             <br />
           </div>
         </Segment>
+
+        <Modal
+            header='Examples of questions'
+            centered={false}
+            content={
+              <div style={{borderRadius:'0px', padding: '20px', border:'none'}}>
+                <List link >
+                  {this.queryEx.map((ex, index)=>
+                    <List.Item as='a' key={index} onClick={this.handleExItemClick}
+                      style={{color:'black', fontSize:15, margin:5}}>{ex}</List.Item>
+                    )
+                  }
+                </List>
+              </div>
+            }
+            open={this.state.examplesOpen}
+            onClose={()=>this.setState({examplesOpen:false})}
+            closeOnDimmerClick={true}
+            closeOnEscape={true}
+            actions={[{ key: 'close', content: 'Close',}]}
+          />
         
         
-        <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '15px',marginTop: '35px' }}>
+        <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px',marginTop: '35px' }}>
           {/* <Dimmer active={this.state.loading === true} inverted> */}
             {/* <Loader active={this.state.loading === true} inverted inline='centered' content='searching/calculating answer'/> */}
             {/* <Image src='loading.svg' centered/>

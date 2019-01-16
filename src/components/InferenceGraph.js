@@ -74,8 +74,8 @@ class InferenceGraph extends Component {
 
     return (
       <div style={{background:'#fff'}}>
-        <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#1A625F', 
-          border:'none', color:'#99E1DE', fontFamily:'Ubuntu Mono'}}>
+        <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#D7DFE6', 
+          border:'none', color:'#404353', fontFamily:'Ubuntu Mono'}}>
             {this.state.alist_string}
         </Segment>
         <Graph
