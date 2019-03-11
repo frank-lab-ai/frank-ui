@@ -9,7 +9,7 @@ class InferenceGraph extends Component {
     this.state = { data: {}, alist_string:'',
       graphConfig : {
         "automaticRearrangeAfterDropNode": true,
-        "height": 700,
+        "height": 800,
         "highlightDegree": 1,
         "highlightOpacity": 1,
         "linkHighlightBehavior": true,
@@ -72,6 +72,10 @@ class InferenceGraph extends Component {
     
   }
 
+  componentDidMount(){
+    
+  }
+
 
   onClickNode = function(nodeId) {    
     this.setState({alist_string : "Selected alist: " + JSON.stringify(this.props.nodes.filter(x => x.id === nodeId)[0]) })
@@ -94,12 +98,14 @@ class InferenceGraph extends Component {
           border:'none', color:'#404353', fontFamily:'Ubuntu Mono'}}>
             {this.state.alist_string}
         </Segment>
-        <Graph
-          id='graph-id' // id is mandatory, if no id is defined rd3g will throw an error
-          data={{nodes: this.props.nodes, links: this.props.edges}}
-          config={this.state.graphConfig}
-          onClickNode={this.onClickNode.bind(this)}
-        />
+
+          <Graph
+            id='graph-id' // id is mandatory, if no id is defined rd3g will throw an error
+            data={{nodes: this.props.nodes, links: this.props.edges}}
+            config={this.state.graphConfig}
+            onClickNode={this.onClickNode.bind(this)}
+          />
+
       </div>
     );
   }

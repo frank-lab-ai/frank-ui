@@ -11,7 +11,7 @@ class Home extends Component {
   constructor() {
     super();
     this.state = { query: '', templates:[], activeIndex: 10, alist:{}, alist_string:'', 
-      answer:{}, loading: false, answer_returned: false, errorMessage:'', examplesOpen:false, sessionId:'', 
+      answer:{}, loading: false, final_answer_returned: false, partial_answer_returned:false, errorMessage:'', examplesOpen:false, sessionId:'', 
       currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100}
     this.templates = [];
     this.queryEx = [
@@ -85,7 +85,7 @@ class Home extends Component {
       return;
     }
     const sessionId = this.generateQuickGuid()
-    this.setState({loading: true, answer_returned: false, sessionId, currentCount:this.state.maxCheckAttempts, timedOut:false}, ()=>{
+    this.setState({loading: true, final_answer_returned: false, partial_answer_returned:false, answer:{}, sessionId, currentCount:this.state.maxCheckAttempts, timedOut:false}, ()=>{
       const { alist } = this.state
       fetch(this.frank_server_endpoint,{
         method: 'POST',
@@ -134,15 +134,19 @@ class Home extends Component {
 
   displayAnswer(data){    
     // console.log(data)
-    this.setState({answer: data, answer_returned: true, loading: false})
+    this.setState({answer: data, final_answer_returned: true, loading: false})
     clearInterval(this.state.intervalId);  // stop timer for checks
   }
 
   displayProgressTrace(data){
     var answer = this.state.answer;
+    answer = data.partial_answer;
     answer.trace = data.trace;
     answer.graph_nodes = data.graph_nodes
-    this.setState({answer: answer})
+    answer.graph_edges = data.graph_edges
+    this.setState({
+        answer: answer, 
+        partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.alist)})
   }
 
   render() {
@@ -237,7 +241,7 @@ class Home extends Component {
           {this.state.loading && 
             <Image src='loading.svg' centered/>
           }
-          {this.state.answer_returned &&
+          {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px',
               background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
               <div>
@@ -270,7 +274,7 @@ class Home extends Component {
             </Segment>
           }
           
-          {this.state.answer_returned &&
+          {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px', 
               background:'#fff',border:'none', color:'black', maxWidth:'1000px', fontFamily:'Ubuntu Mono', marginLeft:'auto', marginRight:'auto'}}>
               <Header as='h4'>Answer Alist</Header>
@@ -278,7 +282,7 @@ class Home extends Component {
             </Segment>
           }
 
-          {this.state.answer_returned===false && this.state.timedOut &&
+          {this.state.final_answer_returned===false && this.state.timedOut &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px',
               background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
               <div style={{padding:10}}>
@@ -306,7 +310,11 @@ class Home extends Component {
               },
               { menuItem: 'Inference Tree', render: () => 
                 <Tab.Pane basic attached={false}>
+                {isNullOrUndefined(this.state.answer.graph_nodes) ===false && 
+                 isNullOrUndefined(this.state.answer.graph_edges) ===false &&
+                 this.state.answer.graph_nodes.length > 0 && 
                   <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} />
+                }
                 </Tab.Pane>
               }
             ]
