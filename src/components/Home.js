@@ -3,6 +3,7 @@ import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab
 import ReactJson from 'react-json-view';
 import InferenceGraph from './InferenceGraph';
 import '../home.css'
+import { isNullOrUndefined } from 'util';
 
 
 
@@ -10,7 +11,8 @@ class Home extends Component {
   constructor() {
     super();
     this.state = { query: '', templates:[], activeIndex: 10, alist:{}, alist_string:'', 
-      answer:{}, loading: false, answer_returned: false, errorMessage:'', examplesOpen:false}
+      answer:{}, loading: false, answer_returned: false, errorMessage:'', examplesOpen:false, sessionId:'', 
+      currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100}
     this.templates = [];
     this.queryEx = [
       "What was the gdp of Ghana in 1998?",
@@ -23,6 +25,7 @@ class Home extends Component {
     this.server_host = "localhost"; //;"localhost"
     this.webui_api_endpoint = "http://" + this.server_host + ":5005";
     this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
+    this.timer = this.timer.bind(this);
   }  
 
   handleAccordionClick = (e, titleProps) => {
@@ -74,23 +77,54 @@ class Home extends Component {
       .then(response => this.updateAlistAndTemplates(response))
     //}
   }
+  
 
   handleRIFQuery(){
     if(!Object.keys(this.state.alist).length){
       this.setState({errorMessage:"FRANK was unable to parse your questions. Can you rephrase?"})
       return;
     }
-    this.setState({loading: true, answer_returned: false})
-    const { alist } = this.state
-    console.log(JSON.stringify(alist))
-    fetch(this.frank_server_endpoint,{
-      method: 'POST',
-      body: JSON.stringify(alist)
+    const sessionId = this.generateQuickGuid()
+    this.setState({loading: true, answer_returned: false, sessionId, currentCount:this.state.maxCheckAttempts, timedOut:false}, ()=>{
+      const { alist } = this.state
+      fetch(this.frank_server_endpoint,{
+        method: 'POST',
+        body: JSON.stringify({alist:alist,  sessionId: sessionId})
+      })
+      .then(result => result.json())
+      .then(response => this.displayAnswer(response))
+
+      //check for answer at timer intervals
+      var intervalId = setInterval(this.timer, 3000);
+      this.setState({intervalId: intervalId});
     })
-    .then(result => result.json())
-    .then(response => this.displayAnswer(response))
+
   }
 
+  checkForAnswer(){
+    console.log("checking for answer")
+    fetch(this.webui_api_endpoint + '/answer/' + this.state.sessionId, {})
+    .then(result => result.json())
+    .then(response => {
+      this.displayProgressTrace(response)
+    })
+  }
+
+  timer=()=>{
+    var newCount = this.state.currentCount - 1;
+    if(newCount >= 0) { 
+        this.checkForAnswer()
+        this.setState({ currentCount: newCount });
+    } else {
+        clearInterval(this.state.intervalId);
+        this.setState({timedOut:true, loading:false})
+    }
+ }
+
+  generateQuickGuid() {
+    return Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15);
+  }
   
 
   updateAlistAndTemplates(data){
@@ -101,6 +135,14 @@ class Home extends Component {
   displayAnswer(data){    
     // console.log(data)
     this.setState({answer: data, answer_returned: true, loading: false})
+    clearInterval(this.state.intervalId);  // stop timer for checks
+  }
+
+  displayProgressTrace(data){
+    var answer = this.state.answer;
+    answer.trace = data.trace;
+    answer.graph_nodes = data.graph_nodes
+    this.setState({answer: answer})
   }
 
   render() {
@@ -154,7 +196,7 @@ class Home extends Component {
                   <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p>
                   <ReactJson src={this.state.alist} theme='monokai' 
                     displayDataTypes={false} displayObjectSize={false} name={false}
-                    style={{padding:10, background:'#404353'}} />
+                    style={{padding:10, background:'#404353', fontSize:11}} />
                 </div>
               </div>
               }
@@ -236,15 +278,26 @@ class Home extends Component {
             </Segment>
           }
 
+          {this.state.answer_returned===false && this.state.timedOut &&
+            <Segment style={{borderRadius:'0px', paddingLeft: '20px',
+              background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
+              <div style={{padding:10}}>
+                <Header as='h2'>Timed Out</Header>
+                <span style={{fontSize:15}}>I give up! I could not find you an answer within reasonable time.</span>
+              </div>
 
-          {this.state.answer_returned &&
+              </Segment>
+            }
+
+
+          {isNullOrUndefined(this.state.answer.trace) ===false &&
           <Tab menu={{ secondary: true, pointing: true }} panes={
             [
               { menuItem: 'Trace', render: () =>
                   <Tab.Pane basic attached={false}>
                   <Segment basic style={{borderRadius:'0px', background:'transparent',border:'none', fontFamily:'Ubuntu Mono'}}>
                     <List divided relaxed size='tiny'>
-                      {this.state.answer_returned ? 
+                      {isNullOrUndefined(this.state.answer.trace) ===false ? 
                       this.state.answer.trace.map((item, index)=>{ return <List.Item key={index} >{item}</List.Item>})
                       : ""}
                     </List>

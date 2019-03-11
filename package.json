@@ -4,11 +4,12 @@
   "private": true,
   "dependencies": {
     "cors": "^2.8.4",
+    "d3": "^5.9.1",
+    "d3-drag": "^1.2.3",
     "moment": "^2.20.1",
     "react": "^16.2.0",
     "react-d3-graph": "^2.0.0-rc2",
     "react-d3-library": "^1.1.8",
-    "react-d3-tree": "^1.12.2",
     "react-day-picker": "^7.0.7",
     "react-dom": "^16.2.0",
     "react-json-view": "^1.19.1",

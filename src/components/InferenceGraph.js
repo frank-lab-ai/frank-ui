@@ -6,7 +6,57 @@ import '../network.css'
 class InferenceGraph extends Component {
   constructor() {
     super();
-    this.state = { data: {}, alist_string:''}
+    this.state = { data: {}, alist_string:'',
+      graphConfig : {
+        "automaticRearrangeAfterDropNode": true,
+        "height": 700,
+        "highlightDegree": 1,
+        "highlightOpacity": 1,
+        "linkHighlightBehavior": true,
+        "collapsible": false,
+        "maxZoom": 5,
+        "minZoom": 0.5,
+        "focusZoom": 1,
+        "focusAnimationDuration": 0.75,
+        "nodeHighlightBehavior": true,
+        "panAndZoom": false,
+        "staticGraph": false,
+        "width": window.innerWidth - 100,
+        "d3": {
+          "alphaTarget": 0.05,
+          "gravity": -100,
+          "linkLength": 100,
+          "linkStrength": 1
+        },
+        "node": {
+          "color": "#e0ebeb",
+          "fontColor": "black",
+          "fontSize": 10,
+          "fontWeight": "normal",
+          "highlightColor": "#b3cccc",
+          "highlightFontSize": 12,
+          "highlightFontWeight": "normal",
+          "highlightStrokeColor": "#476b6b",
+          "highlightStrokeWidth": 2.5,
+          "labelProperty": "id",
+          "mouseCursor": "pointer",
+          "opacity": 1,
+          "renderLabel": true,
+          "size": 400,
+          "strokeColor": "#a3c2c2",
+          "strokeWidth": 2.0,
+          "svg": "",
+          "symbolType": "circle"
+        },
+        "link": {
+          "color": "#a3c2c2",
+          "opacity": 1,
+          "semanticStrokeWidth": false,
+          "strokeWidth": 2.0,
+          "highlightColor": "#476b6b"
+        }
+      }
+    }
 
     // this.state.data = {
     //   nodes: [
@@ -27,50 +77,16 @@ class InferenceGraph extends Component {
     this.setState({alist_string : "Selected alist: " + JSON.stringify(this.props.nodes.filter(x => x.id === nodeId)[0]) })
   };
 
+  onMouseOverNode = function(nodeId) { 
+
+    this.setState({alist_string : "Selected alist: " + JSON.stringify(this.props.nodes.filter(x => x.id === nodeId)[0]) })
+  };
+
   render() {  
     // const graphdata = {nodes: this.props.nodes, links: this.props.edges} 
     // //this.state.data = graphdata
     // this.setState({data : graphdata});   
-    const myConfig = {
-      "automaticRearrangeAfterDropNode": true,
-      "height": 700,
-      "highlightDegree": 1,
-      "highlightOpacity": 1,
-      "linkHighlightBehavior": true,
-      "maxZoom": 1,
-      "minZoom": 1,
-      "nodeHighlightBehavior": true,
-      "panAndZoom": true,
-      "staticGraph": false,
-      "width": window.innerWidth - 100,
-      "node": {
-        "color": "#e0ebeb",
-        "fontColor": "black",
-        "fontSize": 10,
-        "fontWeight": "normal",
-        "highlightColor": "#b3cccc",
-        "highlightFontSize": 12,
-        "highlightFontWeight": "normal",
-        "highlightStrokeColor": "#476b6b",
-        "highlightStrokeWidth": 2.5,
-        "labelProperty": "id",
-        "mouseCursor": "pointer",
-        "opacity": 1,
-        "renderLabel": true,
-        "size": 400,
-        "strokeColor": "#a3c2c2",
-        "strokeWidth": 2.0,
-        "svg": "",
-        "symbolType": "circle"
-      },
-      "link": {
-        "color": "#a3c2c2",
-        "opacity": 1,
-        "semanticStrokeWidth": false,
-        "strokeWidth": 2.0,
-        "highlightColor": "#476b6b"
-      }
-    };
+     
 
     return (
       <div style={{background:'#fff'}}>
@@ -81,7 +97,7 @@ class InferenceGraph extends Component {
         <Graph
           id='graph-id' // id is mandatory, if no id is defined rd3g will throw an error
           data={{nodes: this.props.nodes, links: this.props.edges}}
-          config={myConfig}
+          config={this.state.graphConfig}
           onClickNode={this.onClickNode.bind(this)}
         />
       </div>
