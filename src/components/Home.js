@@ -21,8 +21,8 @@ class Home extends Component {
       "What was the population in 2005 of the country in Africa with the highest gdp in 2010?",
       "country in Europe with the lowest population in 2010"                  
     ]
-    // this.server_host = "34.242.204.151"; //;"localhost"
-    this.server_host = "localhost"; //;"localhost"
+    this.server_host = "34.242.204.151"; //;"localhost"
+    //this.server_host = "localhost"; //;"localhost"
     this.webui_api_endpoint = "http://" + this.server_host + ":5005";
     this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
     this.timer = this.timer.bind(this);
@@ -33,13 +33,13 @@ class Home extends Component {
     const { activeIndex } = this.state
     const newIndex = activeIndex === index ? -1 : index
 
-    this.setState({ activeIndex: newIndex, errorMessage:"" })
+    this.setState({ activeIndex: newIndex, isError:false, errorMessage:"" })
   }
 
   handleChangeQuery(e) { 
     this.setState({errorMessage:""})
     var queryStr = e.target.value
-    this.setState({ query: queryStr})
+    this.setState({ query: queryStr, isError:false})
     if(queryStr.trim().length === 0)
       this.setState({ alist: {}, alist_string:""})
     this.getQueryAlist(queryStr)
@@ -70,29 +70,32 @@ class Home extends Component {
     if(queryStr.trim().length === 0) return;
     //var queryStr = this.state.query
     //if(queryStr[queryStr.length-1] === ' ' || queryStr[queryStr.length-1] === '?'){    
-      console.log("generating")
+      // console.log("generating")
       //generate the templates  
       fetch(this.webui_api_endpoint + '/template/' + queryStr, {})
       .then(result => result.json())
       .then(response => this.updateAlistAndTemplates(response))
+      .catch(err=>this.setState({currentCount: 0, isError:true, errorMessage: "Sorry. FRANK's reasoner is currently offline.", loading: false}))
     //}
   }
   
 
   handleRIFQuery(){
+    if(this.state.query.trim().length === 0) return;
     if(!Object.keys(this.state.alist).length){
-      this.setState({errorMessage:"FRANK was unable to parse your questions. Can you rephrase?"})
+      this.setState({isError:true, errorMessage:"FRANK was unable to parse your questions. Can you rephrase?"})
       return;
     }
     const sessionId = this.generateQuickGuid()
-    this.setState({loading: true, final_answer_returned: false, partial_answer_returned:false, answer:{}, sessionId, currentCount:this.state.maxCheckAttempts, timedOut:false}, ()=>{
+    this.setState({loading: true, final_answer_returned: false, partial_answer_returned:false, answer:{}, sessionId, currentCount:this.state.maxCheckAttempts, timedOut:false, isError:false}, ()=>{
       const { alist } = this.state
       fetch(this.frank_server_endpoint,{
         method: 'POST',
         body: JSON.stringify({alist:alist,  sessionId: sessionId})
       })
-      .then(result => result.json())
-      .then(response => this.displayAnswer(response))
+      .then(response => response.json())
+      .then(result => this.displayAnswer(result))
+      .catch(err=>this.setState({currentCount: 0, isError:true, errorMessage: "Sorry. FRANK's reasoner is currently offline.", loading: false}))
 
       //check for answer at timer intervals
       var intervalId = setInterval(this.timer, 3000);
@@ -102,12 +105,11 @@ class Home extends Component {
   }
 
   checkForAnswer(){
-    console.log("checking for answer")
     fetch(this.webui_api_endpoint + '/answer/' + this.state.sessionId, {})
     .then(result => result.json())
     .then(response => {
       this.displayProgressTrace(response)
-    })
+    })   
   }
 
   timer=()=>{
@@ -129,13 +131,12 @@ class Home extends Component {
 
   updateAlistAndTemplates(data){
     // console.log(data)
-    this.setState({template:data['template'], alist: data['alist'], alist_string: data['alist_string'], question: data['question']})
+    this.setState({template:data['template'], alist: data['alist'], alist_string: data['alist_string'], question: data['question'], isError: false})
   }
 
-  displayAnswer(data){    
-    // console.log(data)
-    this.setState({answer: data, final_answer_returned: true, loading: false})
+  displayAnswer(data){ 
     clearInterval(this.state.intervalId);  // stop timer for checks
+    this.setState({answer: data, final_answer_returned: true, loading: false, isError:false})
   }
 
   displayProgressTrace(data){
@@ -171,18 +172,11 @@ class Home extends Component {
                 style={whiteBgStyle} size='large' transparent
                 placeholder='Type your question...'
                 action={
-                  <Popup 
-                    trigger={
+                 
                       <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
                         style={{borderRadius: '0px', marginLeft:'8px'}} size='large'>
                         <Icon name='search' />
                       </Button>
-                    }
-                    content={this.state.errorMessage}
-                    open={this.state.errorMessage !== ""}
-                    position='top right' style={{borderRadius:0}} inverted
-                  />
-
                 }
                 list='templates'
                 onChange={this.handleChangeQuery.bind(this)}
@@ -238,12 +232,21 @@ class Home extends Component {
           </Dimmer> */}
 
           {/* <Header>Answer</Header> */}
-          {this.state.loading && 
-            <Image src='loading.svg' centered/>
+          {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned && 
+            <Image src='loading.svg' centered size='tiny'/>
+          }
+          {this.state.isError &&
+            <Segment style={{borderRadius:'0px', padding: '20px', 
+              background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto'}}>
+              <span style={{fontSize:13}}> <Icon name='exclamation triangle' color='yellow' size='large' /> {this.state.errorMessage} </span>
+            </Segment>
           }
           {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px',
               background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
+              {this.state.loading && 
+                <Image src='loading.svg' centered size='tiny'/>
+              }
               <div>
                 <Statistic style={{float:'left', marginRight: '30px'}}>
                   <Statistic.Value >{this.state.answer.answer}</Statistic.Value>
@@ -282,7 +285,7 @@ class Home extends Component {
             </Segment>
           }
 
-          {this.state.final_answer_returned===false && this.state.timedOut &&
+          {this.state.final_answer_returned===false && this.state.timedOut && !this.state.isError &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px',
               background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
               <div style={{padding:10}}>
@@ -309,13 +312,14 @@ class Home extends Component {
                 </Tab.Pane>
               },
               { menuItem: 'Inference Tree', render: () => 
-                <Tab.Pane basic attached={false}>
-                {isNullOrUndefined(this.state.answer.graph_nodes) ===false && 
-                 isNullOrUndefined(this.state.answer.graph_edges) ===false &&
-                 this.state.answer.graph_nodes.length > 0 && 
-                  <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} />
+                {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+                  isNullOrUndefined(this.state.answer.graph_nodes) ===false && 
+                  isNullOrUndefined(this.state.answer.graph_edges) ===false &&
+                  this.state.answer.graph_nodes.length > 0 && 
+                  <Tab.Pane basic attached={false}>
+                    <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} />
+                  </Tab.Pane>
                 }
-                </Tab.Pane>
               }
             ]
           } />
