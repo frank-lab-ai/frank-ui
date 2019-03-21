@@ -19,9 +19,10 @@ class Home extends Component {
       "What will be the population of Ghana in 2026?",
       "What is the capital of the United Kingdom?",
       "What was the population in 2005 of the country in Africa with the highest gdp in 2010?",
+      "country with the largest population in 1998",
       "country in Europe with the lowest population in 2010"                  
     ]
-    this.server_host = "34.242.204.151"; //;"localhost"
+    this.server_host = "34.242.204.151"; //;"remote"
     //this.server_host = "localhost"; //;"localhost"
     this.webui_api_endpoint = "http://" + this.server_host + ":5005";
     this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
