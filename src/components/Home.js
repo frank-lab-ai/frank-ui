@@ -12,11 +12,11 @@ class Home extends Component {
     super();
     this.state = { query: '', templates:[], activeIndex: 10, alist:{}, alist_string:'', 
       answer:{}, loading: false, final_answer_returned: false, partial_answer_returned:false, errorMessage:'', examplesOpen:false, sessionId:'', 
-      currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100}
+      currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered:''}
     this.templates = [];
     this.queryEx = [
       "What was the gdp of Ghana in 1998?",
-      "What will be the population of Ghana in 2026?",
+      "What will be the population of France in 2026?",
       "What is the capital of the United Kingdom?",
       "What was the population in 2005 of the country in Africa with the highest gdp in 2010?",
       "country with the largest population in 1998",
@@ -76,7 +76,7 @@ class Home extends Component {
       fetch(this.webui_api_endpoint + '/template/' + queryStr, {})
       .then(result => result.json())
       .then(response => this.updateAlistAndTemplates(response))
-      .catch(err=>this.setState({currentCount: 0, isError:true, errorMessage: "Sorry. FRANK's reasoner is currently offline.", loading: false}))
+      .catch(err=>this.setState({currentCount: 0, isError:true, errorMessage: "Sorry. The FRANK reasoner is currently offline.", loading: false}))
     //}
   }
   
@@ -88,7 +88,8 @@ class Home extends Component {
       return;
     }
     const sessionId = this.generateQuickGuid()
-    this.setState({loading: true, final_answer_returned: false, partial_answer_returned:false, answer:{}, sessionId, currentCount:this.state.maxCheckAttempts, timedOut:false, isError:false}, ()=>{
+    this.setState({loading: true, final_answer_returned: false, partial_answer_returned:false, answer:{}, sessionId, 
+      currentCount:this.state.maxCheckAttempts, timedOut:false, isError:false, questionAnswered:this.state.query}, ()=>{
       const { alist } = this.state
       fetch(this.frank_server_endpoint,{
         method: 'POST',
@@ -173,11 +174,10 @@ class Home extends Component {
                 style={whiteBgStyle} size='large' transparent
                 placeholder='Type your question...'
                 action={
-                 
-                      <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
-                        style={{borderRadius: '0px', marginLeft:'8px'}} size='large'>
-                        <Icon name='search' />
-                      </Button>
+                  <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
+                    style={{borderRadius: '0px', marginLeft:'8px'}} size='large'>
+                    <Icon name='search' />
+                  </Button>
                 }
                 list='templates'
                 onChange={this.handleChangeQuery.bind(this)}
@@ -192,9 +192,9 @@ class Home extends Component {
                     } 
                       content='An alist is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.' />:
                   </p>
-                  <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p>
+                  {/* <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p> */}
                   <ReactJson src={this.state.alist} theme='monokai' 
-                    displayDataTypes={false} displayObjectSize={false} name={false}
+                    displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
                     style={{padding:10, background:'#404353', fontSize:11}} />
                 </div>
               </div>
@@ -236,25 +236,29 @@ class Home extends Component {
           {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned && 
             <Image src='loading.svg' centered size='tiny'/>
           }
+          <div style={{clear:'both'}} />
           {this.state.isError &&
-            <Segment style={{borderRadius:'0px', padding: '20px', 
-              background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto'}}>
+            <div style={{borderRadius:'0px', padding: '20px', 
+             border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto'}}>
               <span style={{fontSize:13}}> <Icon name='exclamation triangle' color='yellow' size='large' /> {this.state.errorMessage} </span>
-            </Segment>
+            </div>
           }
           {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
-            <Segment style={{borderRadius:'0px', paddingLeft: '20px',
+            <Segment style={{borderRadius:'0px', paddingLeft: '20px', paddingBottom:30,
               background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
               {this.state.loading && 
-                <Image src='loading.svg' centered size='tiny'/>
+                <Image src='loading.svg' centered size='tiny' style={{objectFit: 'cover', height: '30px',float: 'right'}}/>
               }
               <div>
-                <Statistic style={{float:'left', marginRight: '30px'}}>
-                  <Statistic.Value >{this.state.answer.answer}</Statistic.Value>
+                <div style={{fontSize: 15 ,fontFamily:'Ubuntu Mono', marginBottom:10, marginTop:10}} >
+                  {this.state.questionAnswered}
+                </div>
+                <Statistic style={{float:'left', marginRight: '30px', marginTop:'20px', marginBottom:10, fontSize: '10px'}}>
+                  <div style={{fontSize: 40, fontWeight:'400'}} >{this.state.answer.answer}</div>
                 </Statistic>
                 
                 {parseFloat(this.state.answer.error_bar) > 0 &&
-                  <Statistic style={{float:'left', marginLeft: '10px', marginTop:'10px'}}>
+                  <Statistic style={{float:'left', marginLeft: '10px', marginTop:'20px'}}>
                     <Statistic.Label > &plusmn; {this.state.answer.error_bar}</Statistic.Label>
                   </Statistic>
                 }
@@ -278,24 +282,36 @@ class Home extends Component {
             </Segment>
           }
           
-          {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+          
+          {(this.state.final_answer_returned || this.state.partial_answer_returned) && this.state.answer.alist.xp !== undefined && this.state.answer.alist.xp &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px', 
               background:'#fff',border:'none', color:'black', maxWidth:'1000px', fontFamily:'Ubuntu Mono', marginLeft:'auto', marginRight:'auto'}}>
-              <Header as='h4'>Answer Alist</Header>
-              {JSON.stringify(this.state.answer.alist)}
+              <b>Explanation:</b>{ ' ' + this.state.answer.alist.xp}
+            </Segment>
+          }
+          
+          {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+            <Segment style={{borderRadius:'0px', paddingLeft: '20px',  paddingBottom:0,
+              background:'#fff',border:'none', color:'black', maxWidth:'1000px', fontFamily:'Ubuntu Mono', marginLeft:'auto', marginRight:'auto'}}>
+              <b>Answer Alist</b><br/>
+              {/* {JSON.stringify(this.state.answer.alist)} */}
+              <ReactJson src={this.state.answer.alist} theme='shapeshifter:inverted' 
+                    displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
+                    style={{padding:10, background:'#FFF', fontSize:11}} />
+
             </Segment>
           }
 
-          {this.state.final_answer_returned===false && this.state.timedOut && !this.state.isError &&
-            <Segment style={{borderRadius:'0px', paddingLeft: '20px',
-              background:'#fff',border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
-              <div style={{padding:10}}>
-                <Header as='h2'>Timed Out</Header>
-                <span style={{fontSize:15}}>I give up! I could not find you an answer within reasonable time.</span>
+          {!this.state.final_answer_returned && this.state.timedOut && !this.state.isError &&
+            <div style={{borderRadius:'0px', paddingLeft: '0px',
+             border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
+              <div style={{padding:10, paddingLeft: 0, color:'orange'}}>
+                <span> <Icon name='clock' style={{fontSize:20}}/> FRANK timed out.</span>
+                
               </div>
 
-              </Segment>
-            }
+              </div>
+          }
 
 
           {isNullOrUndefined(this.state.answer.trace) ===false &&
