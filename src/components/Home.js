@@ -18,7 +18,7 @@ class Home extends Component {
       "What was the gdp of Ghana in 1998?",
       "What will be the population of France in 2026?",
       "What is the capital of the United Kingdom?",
-      "What was the population in 2005 of the country in Africa with the highest gdp in 2010?",
+      "What was the population in 2005 of the country in Europe with the highest gdp in 2010?",
       "country with the largest population in 1998",
       "country in Europe with the lowest population in 2010"                  
     ]
