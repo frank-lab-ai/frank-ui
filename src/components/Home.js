@@ -283,12 +283,12 @@ class Home extends Component {
           }
           
           
-          {(this.state.final_answer_returned || this.state.partial_answer_returned) && this.state.answer.alist.xp !== undefined && this.state.answer.alist.xp &&
+          {/* {(this.state.final_answer_returned || this.state.partial_answer_returned) && this.state.answer.alist.xp !== undefined && this.state.answer.alist.xp &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px', 
               background:'#fff',border:'none', color:'black', maxWidth:'1000px', fontFamily:'Ubuntu Mono', marginLeft:'auto', marginRight:'auto'}}>
               <b>Explanation:</b>{ ' ' + this.state.answer.alist.xp}
             </Segment>
-          }
+          } */}
           
           {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
             <Segment style={{borderRadius:'0px', paddingLeft: '20px',  paddingBottom:0,
@@ -315,8 +315,19 @@ class Home extends Component {
 
 
           {isNullOrUndefined(this.state.answer.trace) ===false &&
-          <Tab menu={{ secondary: true, pointing: true }} panes={
+          <Tab menu={{ secondary: true, pointing: true }} centered panes={
             [
+              { menuItem: 'Explanation', render: () =>
+                  <Tab.Pane basic attached={false}>
+                  {(this.state.final_answer_returned || this.state.partial_answer_returned) && this.state.answer.alist.xp !== undefined && this.state.answer.alist.xp &&
+                    <Segment basic style={{borderRadius:'0px', background:'transparent',border:'none', fontFamily:'Ubuntu Mono'}}>
+                      {isNullOrUndefined(this.state.answer.alist.xp) ===false ? 
+                        this.state.answer.alist.xp: ""
+                      }                      
+                    </Segment>
+                  }
+                </Tab.Pane>
+              },
               { menuItem: 'Trace', render: () =>
                   <Tab.Pane basic attached={false}>
                   <Segment basic style={{borderRadius:'0px', background:'transparent',border:'none', fontFamily:'Ubuntu Mono'}}>
