@@ -12,7 +12,7 @@ class Home extends Component {
     super();
     this.state = { query: '', templates:[], activeIndex: 10, alist:{}, alist_string:'', 
       answer:{}, loading: false, final_answer_returned: false, partial_answer_returned:false, errorMessage:'', examplesOpen:false, sessionId:'', 
-      currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered:''}
+      currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered:'', alist_node: {}, loadingSelectedAlist: false }
     this.templates = [];
     this.queryEx = [
       "What was the gdp of Ghana in 1998?",
@@ -22,8 +22,8 @@ class Home extends Component {
       "country with the largest population in 1998",
       "country in Europe with the lowest population in 2010"                  
     ]
-    this.server_host = "34.242.204.151"; //;"remote"
-    //this.server_host = "localhost"; //;"localhost"
+    //this.server_host = "34.242.204.151"; //;"remote"
+    this.server_host = "localhost"; //;"localhost"
     this.webui_api_endpoint = "http://" + this.server_host + ":5005";
     this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
     this.timer = this.timer.bind(this);
@@ -79,6 +79,8 @@ class Home extends Component {
       .catch(err=>this.setState({currentCount: 0, isError:true, errorMessage: "Sorry. The FRANK reasoner is currently offline.", loading: false}))
     //}
   }
+
+  
   
 
   handleRIFQuery(){
@@ -89,7 +91,8 @@ class Home extends Component {
     }
     const sessionId = this.generateQuickGuid()
     this.setState({loading: true, final_answer_returned: false, partial_answer_returned:false, answer:{}, sessionId, 
-      currentCount:this.state.maxCheckAttempts, timedOut:false, isError:false, questionAnswered:this.state.query}, ()=>{
+      currentCount:this.state.maxCheckAttempts, timedOut:false, isError:false, questionAnswered:this.state.query, alist_node:{},
+      loadingSelectedAlist: false}, ()=>{
       const { alist } = this.state
       fetch(this.frank_server_endpoint,{
         method: 'POST',
@@ -151,6 +154,16 @@ class Home extends Component {
         answer: answer, 
         partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.alist)})
   }
+
+  handleNodeClick(nodeId){
+    this.setState({loadingSelectedAlist:true})
+    fetch(`${this.webui_api_endpoint}/alist/${this.state.sessionId}/${nodeId}`, {})
+    .then(result => result.json())
+    .then(response => {
+      this.setState({alist_node: response, loadingSelectedAlist: false})
+    })
+  }
+
 
   render() {
     var whiteBgStyle = { borderRadius: '0px', background: 'white', padding:'5px', marginBottom:0}
@@ -339,15 +352,26 @@ class Home extends Component {
                   </Segment>
                 </Tab.Pane>
               },
-              { menuItem: 'Inference Tree', render: () => 
-                {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
-                  isNullOrUndefined(this.state.answer.graph_nodes) ===false && 
-                  isNullOrUndefined(this.state.answer.graph_edges) ===false &&
-                  this.state.answer.graph_nodes.length > 0 && 
-                  <Tab.Pane basic attached={false}>
-                    <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} />
+              { menuItem: 'Inference Tree', render: () =>                 
+                  <Tab.Pane basic attached={false} style={{paddingTop:0}}> 
+                    {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+                    isNullOrUndefined(this.state.answer.graph_nodes) ===false && 
+                    isNullOrUndefined(this.state.answer.graph_edges) ===false &&
+                    this.state.answer.graph_nodes.length > 0 && 
+                      <div>
+                        <Segment style={{borderRadius:'0px', paddingLeft: '20px', marginTop:0, marginBottom:0, background:'#fff', 
+                            border:'none', color:'#000', fontFamily:'Ubuntu Mono', minHeight: 50}}>
+                            {this.state.loadingSelectedAlist && 
+                              <Image src='loading.svg' size='mini' style={{float:'left', objectFit: 'cover', height: '20px'}}/> 
+                            }
+                            {!this.state.loadingSelectedAlist && <span style={{float:'left'}}>{JSON.stringify(this.state.alist_node)}</span> }
+                              <div style={{clear:'both'}} />
+                        </Segment>
+                        <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} handleNodeClick={this.handleNodeClick.bind(this)} />
+                      </div>
+                      
+                    }
                   </Tab.Pane>
-                }
               }
             ]
           } />

@@ -77,8 +77,8 @@ class InferenceGraph extends Component {
   }
 
 
-  onClickNode = function(nodeId) {    
-    this.setState({alist_string : "Selected alist: " + JSON.stringify(this.props.nodes.filter(x => x.id === nodeId)[0]) })
+  onClickNode = function(nodeId) {   
+    this.props.handleNodeClick(nodeId)
   };
 
   onMouseOverNode = function(nodeId) { 
@@ -94,11 +94,6 @@ class InferenceGraph extends Component {
 
     return (
       <div style={{background:'#fff'}}>
-        <Segment style={{borderRadius:'0px', paddingLeft: '20px', background:'#D7DFE6', 
-          border:'none', color:'#404353', fontFamily:'Ubuntu Mono'}}>
-            {this.state.alist_string}
-        </Segment>
-
           <Graph
             id='graph-id' // id is mandatory, if no id is defined rd3g will throw an error
             data={{nodes: this.props.nodes, links: this.props.edges}}
