@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab, Image, Popup } from 'semantic-ui-react';
 import ReactJson from 'react-json-view';
 import InferenceGraph from './InferenceGraph';
+import FrankChart from './FrankChart';
 import '../home.css'
 import { isNullOrUndefined } from 'util';
 
@@ -12,8 +13,13 @@ class Home extends Component {
     super();
     this.state = { query: '', templates:[], activeIndex: 10, alist:{}, alist_string:'', 
       answer:{}, loading: false, final_answer_returned: false, partial_answer_returned:false, errorMessage:'', examplesOpen:false, sessionId:'', 
-      currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered:'', alist_node: {}, loadingSelectedAlist: false }
-    this.templates = [];
+      currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered:'', alist_node: {}, loadingSelectedAlist: false,
+      plotData: {"p": "population", 
+        "fp": "{\"function\" :[-5.2617682627407867E8,294139.066666669], \"data\":[[2017.0, 6.7118648E7],[2016.0, 6.6706879333333336E7],[2015.0, 6.6486984E7],[2014.0, 6.6316092E7],[2013.0, 6.5969263E7],[2012.0, 6.56546795E7],[2011.0, 6.53431815E7],[2010.0, 6.50253245E7],[2009.0, 6.47049825E7]]}", 
+        "h": "regress", "o": "?y0", "v": "?y0", "t": "2026", "id": "102", "s": "France", 
+        "xp": " The predicted population value using a regression function based on values from past years is 6.97489227925927E7."} }
+    
+      this.templates = [];
     this.queryEx = [
       "What was the gdp of Ghana in 1998?",
       "What will be the population of France in 2026?",
@@ -22,8 +28,8 @@ class Home extends Component {
       "country with the largest population in 1998",
       "country in Europe with the lowest population in 2010"                  
     ]
-    //this.server_host = "34.242.204.151"; //;"remote"
-    this.server_host = "localhost"; //;"localhost"
+    this.server_host = "34.242.204.151"; //;"remote"
+    //this.server_host = "localhost"; //;"localhost"
     this.webui_api_endpoint = "http://" + this.server_host + ":5005";
     this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
     this.timer = this.timer.bind(this);
@@ -316,7 +322,7 @@ class Home extends Component {
           }
 
           {!this.state.final_answer_returned && this.state.timedOut && !this.state.isError &&
-            <div style={{borderRadius:'0px', paddingLeft: '0px',
+            <div style={{borderRadius:'0px', paddingLeft: '0px',  
              border:'none', color:'black', maxWidth:'1000px', marginLeft:'auto', marginRight:'auto' }}>
               <div style={{padding:10, paddingLeft: 0, color:'orange'}}>
                 <span> <Icon name='clock' style={{fontSize:20}}/> FRANK timed out.</span>
@@ -366,7 +372,9 @@ class Home extends Component {
                             }
                             {!this.state.loadingSelectedAlist && <span style={{float:'left'}}>{JSON.stringify(this.state.alist_node)}</span> }
                               <div style={{clear:'both'}} />
+                            {!this.state.loadingSelectedAlist && <FrankChart alist={this.state.alist_node} /> }
                         </Segment>
+                        
                         <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} handleNodeClick={this.handleNodeClick.bind(this)} />
                       </div>
                       
