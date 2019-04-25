@@ -28,8 +28,8 @@ class Home extends Component {
       "country with the largest population in 1998",
       "country in Europe with the lowest population in 2010"                  
     ]
-    //this.server_host = "34.242.204.151"; //;"remote"
-    this.server_host = "localhost"; //;"localhost"
+    this.server_host = "34.242.204.151"; //;"remote"
+    //this.server_host = "localhost"; //;"localhost"
     this.webui_api_endpoint = "http://" + this.server_host + ":5005";
     this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
     this.timer = this.timer.bind(this);
