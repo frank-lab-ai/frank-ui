@@ -209,7 +209,18 @@ class Home extends Component {
                     <Popup inverted trigger={
                       <Icon size='large' color='orange' name='question circle' style={{marginTop:'-5px', marginLeft:'5px'}}/>
                     } 
-                      content='An alist is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.' />:
+                      content= {<p> An alist is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK. 
+                      Attribute names:<ul>
+                        <li>h = operation</li>
+                        <li>v = operation variable</li>
+                        <li>s = subject</li>
+                        <li>p = property (or predicate)</li>
+                        <li>o = object</li>
+                        <li>t = time</li>
+                        <li>u = uncertainty</li>
+                        <li>xp = explanation</li>
+                        </ul></p>} 
+                    />:
                   </p>
                   {/* <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p> */}
                   <ReactJson src={this.state.alist} theme='monokai' 
