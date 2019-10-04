@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "cors": "^2.8.4",
+    "cytoscape": "^3.10.0",
     "d3": "^5.9.1",
     "d3-drag": "^1.2.3",
     "moment": "^2.20.1",

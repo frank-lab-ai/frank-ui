@@ -28,10 +28,10 @@ class Home extends Component {
       "country with the largest population in 1998",
       "country in Europe with the lowest population in 2010"                  
     ]
-    this.server_host = "34.242.204.151"; //;"remote"
-    //this.server_host = "localhost"; //;"localhost"
+    // this.server_host = "34.242.204.151"; //;"remote"
+    this.server_host = "localhost"; //;"localhost"
     this.webui_api_endpoint = "http://" + this.server_host + ":5005";
-    this.frank_server_endpoint = "http://" + this.server_host + ":9876/query";
+    this.frank_api_endpoint = "http://" + this.server_host + ":9876";
     this.timer = this.timer.bind(this);
   }  
 
@@ -100,8 +100,9 @@ class Home extends Component {
       currentCount:this.state.maxCheckAttempts, timedOut:false, isError:false, questionAnswered:this.state.query, alist_node:{},
       loadingSelectedAlist: false}, ()=>{
       const { alist } = this.state
-      fetch(this.frank_server_endpoint,{
+      fetch(this.frank_api_endpoint + "/query",{
         method: 'POST',
+        headers:{'content-type':'application/json'},
         body: JSON.stringify({alist:alist,  sessionId: sessionId})
       })
       .then(response => response.json())
@@ -116,7 +117,7 @@ class Home extends Component {
   }
 
   checkForAnswer(){
-    fetch(this.webui_api_endpoint + '/answer/' + this.state.sessionId, {})
+    fetch(this.frank_api_endpoint + '/answer/' + this.state.sessionId, {})
     .then(result => result.json())
     .then(response => {
       this.displayProgressTrace(response)
@@ -146,8 +147,10 @@ class Home extends Component {
   }
 
   displayAnswer(data){ 
-    clearInterval(this.state.intervalId);  // stop timer for checks
-    this.setState({answer: data, final_answer_returned: true, loading: false, isError:false})
+    if (data.answer !== undefined){
+      clearInterval(this.state.intervalId);  // stop timer for checks
+      this.setState({answer: data, final_answer_returned: true, loading: false, isError:false})
+    }
   }
 
   displayProgressTrace(data){
@@ -156,14 +159,25 @@ class Home extends Component {
     answer.trace = data.trace;
     answer.graph_nodes = data.graph_nodes
     answer.graph_edges = data.graph_edges
+    var isFinal =  data.answer !== undefined && data.answer.length > 0
+    if(isFinal)
+      clearInterval(this.state.intervalId)
+    var isError = this.state.isError
+    if (isFinal || !isNullOrUndefined(data.partial_answer))
+      isError = false;
+
     this.setState({
         answer: answer, 
-        partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.alist)})
+        final_answer_returned: isFinal,
+        loading: !isFinal,
+        isError: false,
+        partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.alist)
+      })
   }
 
   handleNodeClick(nodeId){
     this.setState({loadingSelectedAlist:true})
-    fetch(`${this.webui_api_endpoint}/alist/${this.state.sessionId}/${nodeId}`, {})
+    fetch(`${this.frank_api_endpoint}/alist/${this.state.sessionId}/${nodeId}`, {})
     .then(result => result.json())
     .then(response => {
       this.setState({alist_node: response, loadingSelectedAlist: false})
