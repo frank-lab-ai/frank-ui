@@ -36,7 +36,6 @@ class Home extends Component {
     ]
     // this.server_host = "34.242.204.151"; //;"remote"
     this.server_host = "localhost"; //;"localhost"
-    this.webui_api_endpoint = "http://" + this.server_host + ":5005";
     this.frank_api_endpoint = "http://" + this.server_host + ":9876";
     this.timer = this.timer.bind(this);
   }
@@ -85,7 +84,7 @@ class Home extends Component {
     //if(queryStr[queryStr.length-1] === ' ' || queryStr[queryStr.length-1] === '?'){    
     // console.log("generating")
     //generate the templates  
-    fetch(this.webui_api_endpoint + '/template/' + queryStr, {})
+    fetch(this.frank_api_endpoint + '/template/' + queryStr, {})
       .then(result => result.json())
       .then(response => this.updateAlistAndTemplates(response))
       .catch(err => this.setState({ currentCount: 0, isError: true, errorMessage: "Sorry. The FRANK reasoner is currently offline.", loading: false }))
