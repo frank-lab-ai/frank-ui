@@ -21,7 +21,7 @@ class InferenceGraph extends Component {
         "nodeHighlightBehavior": true,
         "panAndZoom": false,
         "staticGraph": false,
-        "width": window.innerWidth - 100,
+        "width": window.innerWidth - 150,
         "d3": {
           "alphaTarget": 0.05,
           "gravity": -100,

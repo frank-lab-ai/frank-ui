@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab, Image, Popup } from 'semantic-ui-react';
 import ReactJson from 'react-json-view';
 import InferenceGraph from './InferenceGraph';
+import CytoscapeGraph from './CytoscapeGraph';
 import FrankChart from './FrankChart';
 import NumericInput from 'react-numeric-input';
 import '../home.css'
@@ -16,13 +17,14 @@ class Home extends Component {
       query: '', templates: [], activeIndex: 10, alist: {}, alist_string: '',
       answer: {}, loading: false, final_answer_returned: false, partial_answer_returned: false, errorMessage: '', examplesOpen: false, sessionId: '',
       currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
-      blanketLength: 1, explanation:{all:'', what:'', how:'', why:''},
-      plotData: {
-        "p": "population",
-        "fp": "{\"function\" :[-5.2617682627407867E8,294139.066666669], \"data\":[[2017.0, 6.7118648E7],[2016.0, 6.6706879333333336E7],[2015.0, 6.6486984E7],[2014.0, 6.6316092E7],[2013.0, 6.5969263E7],[2012.0, 6.56546795E7],[2011.0, 6.53431815E7],[2010.0, 6.50253245E7],[2009.0, 6.47049825E7]]}",
-        "h": "regress", "o": "?y0", "v": "?y0", "t": "2026", "id": "102", "s": "France",
-        "xp": " The predicted population value using a regression function based on values from past years is 6.97489227925927E7."
-      }
+      blanketLength: 1, explanation:{all:'', what:'', how:'', why:''}, traceOpen:false, inferenceGraphOpen:false,
+      plotData:{},
+      // plotData: {
+      //   "p": "population",
+      //   "fp": "{\"function\" :[-5.2617682627407867E8,294139.066666669], \"data\":[[2017.0, 6.7118648E7],[2016.0, 6.6706879333333336E7],[2015.0, 6.6486984E7],[2014.0, 6.6316092E7],[2013.0, 6.5969263E7],[2012.0, 6.56546795E7],[2011.0, 6.53431815E7],[2010.0, 6.50253245E7],[2009.0, 6.47049825E7]]}",
+      //   "h": "regress", "o": "?y0", "v": "?y0", "t": "2026", "id": "102", "s": "France",
+      //   "xp": " The predicted population value using a regression function based on values from past years is 6.97489227925927E7."
+      // },      
     }
 
     this.templates = [];
@@ -156,7 +158,9 @@ class Home extends Component {
   displayAnswer(data) {
     if (data.answer !== undefined) {
       clearInterval(this.state.intervalId);  // stop timer for checks
-      this.setState({ answer: data, final_answer_returned: true, loading: false, isError: false })
+      var today = new Date();
+      var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      this.setState({ answer: data, final_answer_returned: true, loading: false, isError: false, answer_data_last_changed:time })
     }
   }
 
@@ -286,12 +290,6 @@ class Home extends Component {
 
 
         <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px', marginTop: '35px' }}>
-          {/* <Dimmer active={this.state.loading === true} inverted> */}
-          {/* <Loader active={this.state.loading === true} inverted inline='centered' content='searching/calculating answer'/> */}
-          {/* <Image src='loading.svg' centered/>
-          </Dimmer> */}
-
-          {/* <Header>Answer</Header> */}
           {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned &&
             <Image src='loading.svg' centered size='tiny' />
           }
@@ -342,18 +340,18 @@ class Home extends Component {
                 <Label.Detail>{this.state.answer.elapsed_time}</Label.Detail>
               </Label>
 
+              {isNullOrUndefined(this.state.answer.alist.xp) === false &&
+                <div style={{marginTop:20,}}>
+                  <span style={{fontWeight:600}}>Explanation:</span> {this.state.answer.alist.xp}
+                </div>
+                
+              }
+
             </Segment>
+            
           }
 
-
-          {/* {(this.state.final_answer_returned || this.state.partial_answer_returned) && this.state.answer.alist.xp !== undefined && this.state.answer.alist.xp &&
-            <Segment style={{borderRadius:'0px', paddingLeft: '20px', 
-              background:'#fff',border:'none', color:'black', maxWidth:'1000px', fontFamily:'Ubuntu Mono', marginLeft:'auto', marginRight:'auto'}}>
-              <b>Explanation:</b>{ ' ' + this.state.answer.alist.xp}
-            </Segment>
-          } */}
-
-          {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+        {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
             <Segment style={{
               borderRadius: '0px', paddingLeft: '20px', paddingBottom: 0,
               background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', fontFamily: 'Ubuntu Mono', marginLeft: 'auto', marginRight: 'auto'
@@ -366,6 +364,105 @@ class Home extends Component {
 
             </Segment>
           }
+
+          {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+            <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
+              <Modal
+                trigger={<Button basic color='teal' onClick={()=>this.setState({inferenceGraphOpen:true})}>Inference Graph</Button>}
+                centered={false}
+                open={this.state.inferenceGraphOpen}
+                onClose={() => this.setState({ inferenceGraphOpen: false })}
+                closeOnDimmerClick={true}
+                closeOnEscape={true}
+                size='fullscreen' dimmer='blurring'
+              >
+              {/* <Modal.Header>Inference Graph</Modal.Header> */}
+                <Modal.Content scrolling style={{maxHeight:'calc(95vh)'}}>
+                  <div style={{ borderRadius: '0px', padding: '0px', border: 'none' }}>
+                  
+                  {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+                        isNullOrUndefined(this.state.answer.graph_nodes) === false &&
+                        isNullOrUndefined(this.state.answer.graph_edges) === false &&
+                        this.state.answer.graph_nodes.length > 0 &&
+                        <div>
+                          <div style={{
+                            borderRadius: '0px', paddingLeft: '0px', marginTop: 0, marginBottom: 0, background: '#fff',
+                            border: 'none', color: '#000', fontFamily: 'Ubuntu Mono', minHeight: 50
+                          }}>
+                            
+                            <div style={{marginTop: 5, marginBottom:10}}>
+                              <span  style={{float:'left', marginLeft: 0, paddingTop:0}}>Explanation Blanket Length:</span>
+                              <NumericInput min={1} max={30} value={this.state.blanketLength} onChange={this.handleBlanketLengthChange.bind(this)} 
+                                style={{input: {width:50}, float:'left', marginLeft: 7}}/>
+                            </div>
+                            {(this.state.loadingSelectedAlist || this.state.loading) &&
+                              <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px' }} />
+                            }
+                            <div style={{clear:'both', marginTop:10}} />
+                            {!this.state.loadingSelectedAlist && this.state.alist_node &&
+                              <div> 
+                                {Object.keys(this.state.alist_node).length > 0 &&
+                                  <div style={{ float: 'left' }}><span style={{fontWeight: 600}}>Alist: </span>{JSON.stringify(this.state.alist_node)}</div>
+                                }
+                                <div style={{clear:'both', marginTop:10}} />
+                                {this.state.explanation.all.length > 0 &&
+                                  <div style={{ float: 'left' }}><span style={{fontWeight: 600}}>Explanation: </span>{this.state.explanation.all}</div>
+                                }
+                              </div>
+                            }
+
+                            <div style={{ clear: 'both' }} />
+                            {!this.state.loadingSelectedAlist && <FrankChart alist={this.state.alist_node} />}
+                          </div>
+
+                          {/* <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} handleNodeClick={this.handleNodeClick.bind(this)} /> */}
+                          <CytoscapeGraph 
+                            data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} height='800px'
+                            handleNodeClick={this.handleNodeClick.bind(this)} lastChanged={this.state.answer_data_last_changed} />
+                        </div>
+
+                      }
+                  </div>
+                </Modal.Content>
+                <Modal.Actions style={{paddingTop:5, paddingBottom:5}}>
+                  <Button size='mini' onClick={() => this.setState({ inferenceGraphOpen: false })}>
+                    Close
+                  </Button>
+                </Modal.Actions>
+              </Modal>
+             
+
+              <Modal
+                trigger={<Button basic color='teal' onClick={()=>this.setState({traceOpen:true})}>Trace</Button>}
+                centered={false}
+                open={this.state.traceOpen}
+                onClose={() => this.setState({ traceOpen: false })}
+                closeOnDimmerClick={true}
+                closeOnEscape={true}
+                size='fullscreen' dimmer='blurring'
+              >
+                <Modal.Header>Inference Trace</Modal.Header>
+                <Modal.Content scrolling>
+                  <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
+                    <List divided relaxed size='tiny'>
+                        {isNullOrUndefined(this.state.answer.trace) === false ?
+                          this.state.answer.trace.map((item, index) => { return <List.Item key={index} >{item}</List.Item> })
+                          : ""}
+                    </List>
+                  </div>
+                </Modal.Content>
+                <Modal.Actions>
+                  <Button onClick={() => this.setState({ traceOpen: false })}>
+                    Close
+                  </Button>
+                </Modal.Actions>
+              </Modal>
+
+            </div>
+          }
+
+          
+
 
           {!this.state.final_answer_returned && this.state.timedOut && !this.state.isError &&
             <div style={{
@@ -381,80 +478,9 @@ class Home extends Component {
           }
 
 
-          {isNullOrUndefined(this.state.answer.trace) === false &&
-            <Tab menu={{ secondary: true, pointing: true }} centered panes={
-              [
-                {
-                  menuItem: 'Explanation', render: () =>
-                    <Tab.Pane basic attached={false}>
-                      {(this.state.final_answer_returned || this.state.partial_answer_returned) && this.state.answer.alist.xp !== undefined && this.state.answer.alist.xp &&
-                        <Segment basic style={{ borderRadius: '0px', background: 'transparent', border: 'none', fontFamily: 'Ubuntu Mono' }}>
-                          {isNullOrUndefined(this.state.answer.alist.xp) === false ?
-                            this.state.answer.alist.xp : ""
-                          }
-                        </Segment>
-                      }
-                    </Tab.Pane>
-                },
-                {
-                  menuItem: 'Trace', render: () =>
-                    <Tab.Pane basic attached={false}>
-                      <Segment basic style={{ borderRadius: '0px', background: 'transparent', border: 'none', fontFamily: 'Ubuntu Mono' }}>
-                        <List divided relaxed size='tiny'>
-                          {isNullOrUndefined(this.state.answer.trace) === false ?
-                            this.state.answer.trace.map((item, index) => { return <List.Item key={index} >{item}</List.Item> })
-                            : ""}
-                        </List>
-                      </Segment>
-                    </Tab.Pane>
-                },
-                {
-                  menuItem: 'Inference Tree', render: () =>
-                    <Tab.Pane basic attached={false} style={{ paddingTop: 0 }}>
-                      {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
-                        isNullOrUndefined(this.state.answer.graph_nodes) === false &&
-                        isNullOrUndefined(this.state.answer.graph_edges) === false &&
-                        this.state.answer.graph_nodes.length > 0 &&
-                        <div>
-                          <Segment style={{
-                            borderRadius: '0px', paddingLeft: '20px', marginTop: 0, marginBottom: 0, background: '#fff',
-                            border: 'none', color: '#000', fontFamily: 'Ubuntu Mono', minHeight: 50
-                          }}>
-                            {this.state.loadingSelectedAlist &&
-                              <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px' }} />
-                            }
-                            {!this.state.loadingSelectedAlist && this.state.alist_node &&
-                              <div>                                
-                                <div style={{marginTop: 5, marginBottom:10}}>
-                                  <span  style={{float:'left', marginLeft: 0, paddingTop:0}}>Explanation Blanket Length:</span>
-                                  <NumericInput min={1} max={30} value={this.state.blanketLength} onChange={this.handleBlanketLengthChange.bind(this)} 
-                                    style={{input: {width:50}, float:'left', marginLeft: 7}}/>
-                                </div>
-                                <div style={{clear:'both', marginTop:10}} />
-                                {Object.keys(this.state.alist_node).length > 0 &&
-                                  <div style={{ float: 'left' }}><span style={{fontWeight: 600}}>Alist: </span>{JSON.stringify(this.state.alist_node)}</div>
-                                }
-                                <div style={{clear:'both', marginTop:10}} />
-                                {this.state.explanation.all.length > 0 &&
-                                  <div style={{ float: 'left' }}><span style={{fontWeight: 600}}>Explanation: </span>{this.state.explanation.all}</div>
-                                }
-                              </div>
-                            }
-
-                            <div style={{ clear: 'both' }} />
-                            {!this.state.loadingSelectedAlist && <FrankChart alist={this.state.alist_node} />}
-                          </Segment>
-
-                          <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} handleNodeClick={this.handleNodeClick.bind(this)} />
-                        </div>
-
-                      }
-                    </Tab.Pane>
-                }
-              ]
-            } />
-          }
+          
         </Segment>
+        
       </div>
     );
   }
