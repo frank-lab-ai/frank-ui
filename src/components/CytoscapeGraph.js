@@ -13,49 +13,62 @@ cytoscape.use( cxtmenu );
 //     display: 'block'
 // };
 
-let  defaultNodeColor = "#F2711C"
-let  selectedNodeColor = "#4E607A"
+let  defaultNodeColor = "#F48D49";
+let  selectedNodeColor = "#F2711C";
+let  nodeHighlightColor = "#F2711C";
 let conf = {
     // boxSelectionEnabled: true,
     // autounselectify: true,
     zoomingEnabled: true,
     minZoom: 0.5,
     maxZoom: 5,
+    wheelSensitivity: 0.5,
     style: [
+        {
+            selector: 'core',
+            style: {
+                'active-bg-size': 0
+            }
+        },
         {
             selector: 'node',
             style: {
                 'content': 'data(label)',
-                'text-opacity': 0.5,
+                'text-opacity': 1,
                 'text-valign': 'center',
-                'text-halign': 'right',
-                'font-size': 10,
-                'background-color': defaultNodeColor
-                    //function (ele) {
-                    //const nodeData = ele.data();
+                'text-halign': 'center',
+                'color': 'white',
+                'font-size': 11,
+                'background-color': defaultNodeColor,
+                "selection-box-opacity": 0,
+                "height":50,
+                "width": 50,
+                "border-style":"solid",
+                "border-color":"#dc681a",
+                "border-width":2,  
 
-                    // switch (nodeData.data.status) {
-                    //     case 'SUCCESS':
-                    //         return "#00b200";
-                    //     case 'PENDING':
-                    //         return "#737373";
-                    //     case 'FAILURE':
-                    //         return "#b20000";
-                    //     case 'RECEIVED':
-                    //         return "#e59400";
-                    //     default:
-                    //         return "#9366b4";
-
-                    // }
-               // }
             }
         },
         {
-            selector: ':selected',
+            selector: ':active',
             style: {
-                'content': 'data(label)',
-                'text-opacity': 1.0,
-                'background-color': selectedNodeColor
+                // 'background-color': selectedNodeColor,
+                'overlay-color': selectedNodeColor,
+                'overlay-padding': 5,
+                'overlay-opacity': 0.2,
+            }
+        },
+       
+        {
+            selector: 'node.highlight',
+            style: {
+                // 'border-color': nodeHighlightColor,
+                // 'border-width': '20px',
+                // "border-opacity": "0.3",
+                "outline-style": "solid",
+                "outline-width": 10,
+                "outline-color":"red",
+                "outline-offset": "15px",
             }
         },
         {
@@ -68,10 +81,13 @@ let conf = {
                 'font-size': 10,
                 'target-arrow-color': "gray[700]",
                 "text-rotation": "autorotate",
-                "text-margin-x": "2px",
-                "text-margin-y": "2px",
+                "text-border-style": "solid",
+                "text-border-style": "3px",
+                "text-border-color": "white",
+                "text-border-opacity": 0.9,
                 'label': 'data(label)',
-                'background' :'white'
+                'text-background-color' :'white',
+                'text-background-opacity': 0.9,
             }
         }
     ],
@@ -81,54 +97,6 @@ let conf = {
     }
 };
 
-// let menu_defaults = {
-//     menuRadius: 50, // the radius of the circular menu in pixels
-//     selector: 'node', // elements matching this Cytoscape.js selector will trigger cxtmenus
-//     commands: [ // an array of commands to list in the menu or a function that returns the array
-      
-//       { // example command
-//         fillColor: 'rgba(61,65,78, 0.80)', // optional: custom background color for item
-//         content: "<img src='images/solution.png'  height='20px' width='20px' />", // html/text content to be displayed in the menu
-//         // contentStyle: {}, // css key:value pairs to set the command's css in js if you want
-//         // select: function(ele){ // a function to execute when the command is selected
-//         //   console.log( ele.id() ) // `ele` holds the reference to the active element
-//         // },
-//         enabled: true // whether the command is selectable
-//       },
-//       { // show children
-//         fillColor: 'rgba(61,65,78, 0.80))', // optional: custom background color for item
-//         content: "<img src='images/network.png' height='20px' width='20px' />", // html/text content to be displayed in the menu
-//         // contentStyle: {}, // css key:value pairs to set the command's css in js if you want
-//         // select: function(ele){ // a function to execute when the command is selected
-//         //   console.log( ele.id() ) // `ele` holds the reference to the active element
-//         // },
-//         enabled: true // whether the command is selectable
-//       },
-//       { // hide node
-//         fillColor: 'rgba(61,65,78, 0.80))', // optional: custom background color for item
-//         content: "<img src='images/visibility.png'  height='20px' width='20px' />", // html/text content to be displayed in the menu
-//         // contentStyle: {}, // css key:value pairs to set the command's css in js if you want
-//         select: function(ele){ // a function to execute when the command is selected
-//           console.log( ele.id() ) // `ele` holds the reference to the active element
-//         },
-//         enabled: true // whether the command is selectable
-//       },
-      
-//     ], // function( ele ){ return [ /*...*/ ] }, // a function that returns commands or a promise of commands
-//     fillColor: 'rgba(61,65,78, 0.80)', // the background colour of the menu
-//     activeFillColor: 'rgba(0,153,153, 0.80)', // the colour used to indicate the selected command
-//     activePadding: 15, // additional size in pixels for the active command
-//     indicatorSize: 15, // the size in pixels of the pointer to the active command
-//     separatorWidth: 2, // the empty spacing in pixels between successive commands
-//     spotlightPadding: 2, // extra spacing in pixels between the element and the spotlight
-//     minSpotlightRadius: 10, // the minimum radius in pixels of the spotlight
-//     maxSpotlightRadius: 25, // the maximum radius in pixels of the spotlight
-//     openMenuEvents: 'cxttapstart taphold', // space-separated cytoscape events that will open the menu; only `cxttapstart` and/or `taphold` work here
-//     itemColor: 'white', // the colour of text in the command's content
-//     itemTextShadowColor: 'transparent', // the text shadow colour of the command's content
-//     zIndex: 9999, // the z-index of the ui div
-//     atMouse: false // draw menu at mouse position
-//   };
 
 class CytoscapeGraph extends Component {
     constructor(props) {
@@ -137,13 +105,13 @@ class CytoscapeGraph extends Component {
     }
 
     menu_defaults = {
-        menuRadius: 50, // the radius of the circular menu in pixels
+        menuRadius: 70, // the radius of the circular menu in pixels
         selector: 'node', // elements matching this Cytoscape.js selector will trigger cxtmenus
         commands: [ // an array of commands to list in the menu or a function that returns the array
           
           { // example command
-            fillColor: 'rgba(61,65,78, 0.80)', // optional: custom background color for item
-            content: "<img src='images/solution.png'  height='20px' width='20px' />", // html/text content to be displayed in the menu
+            // fillColor: 'rgba(61,65,78, 0.80)', // optional: custom background color for item
+            content: "<img src='images/solution.png'  height='22px' width='22px' />", // html/text content to be displayed in the menu
             // contentStyle: {}, // css key:value pairs to set the command's css in js if you want
             select: (ele)=>{ // a function to execute when the command is selected
                 // console.log( ele.id() ) // `ele` holds the reference to the active element
@@ -152,37 +120,55 @@ class CytoscapeGraph extends Component {
             enabled: true // whether the command is selectable
           },
           { // show children
-            fillColor: 'rgba(61,65,78, 0.80))', // optional: custom background color for item
-            content: "<img src='images/network.png' height='20px' width='20px' />", // html/text content to be displayed in the menu
+            // fillColor: 'rgba(61,65,78, 0.80))', // optional: custom background color for item
+            content: "<img src='images/network.png' height='22px' width='22px' />", // html/text content to be displayed in the menu
             // contentStyle: {}, // css key:value pairs to set the command's css in js if you want
             select: (ele)=>{ // a function to execute when the command is selected
-              //console.log( ele.id() ) // `ele` holds the reference to the active element
-              if (ele.successors().targets()[0] !== undefined && ele.successors().targets()[0].style("display") == "none")
-                ele.successors().targets().style("display", "element");
+                              //console.log( ele.id() ) // `ele` holds the reference to the active element
+              var hiddenOutgoers = ele.outgoers().targets().filter((x)=>x.style("display") == "none")
+
+              if (hiddenOutgoers.length > 0)
+                ele.outgoers().targets().style("display", "element");
+              else
+                ele.successors().targets().style("display", "none");
+              
             },
             enabled: true // whether the command is selectable
           },
-          { // hide node
-            fillColor: 'rgba(61,65,78, 0.80))', // optional: custom background color for item
-            content: "<img src='images/visibility.png'  height='20px' width='20px' />", // html/text content to be displayed in the menu
+          { // hide node and successors
+            // fillColor: 'rgba(61,65,78, 0.80))', // optional: custom background color for item
+            content: "<img src='images/visibility.png'  height='22px' width='22px' />", // html/text content to be displayed in the menu
             // contentStyle: {}, // css key:value pairs to set the command's css in js if you want
             select: (ele)=>{ // a function to execute when the command is selected
-              console.log( ele.id() ); // `ele` holds the reference to the active element
-              ele.successors().targets().style("display", "none");
+                if (ele.id()!=="0") {
+                    ele.successors().targets().style("display", "none");
+                    ele.style("display", "none");
+                }
+              
+            },
+            enabled: true
+          },
+          { // close menu
+            // fillColor: 'rgba(61,65,78, 0.80))', // optional: custom background color for item
+            content: "<img src='images/cancel.png' height='22px' width='22px' />", // html/text content to be displayed in the menu
+            // contentStyle: {}, // css key:value pairs to set the command's css in js if you want
+            select: (ele)=>{ // a function to execute when the command is selected
+                // do nothing
             },
             enabled: true // whether the command is selectable
           },
           
         ], // function( ele ){ return [ /*...*/ ] }, // a function that returns commands or a promise of commands
-        fillColor: 'rgba(61,65,78, 0.80)', // the background colour of the menu
+        fillColor: 'rgba(189,192,193, 0.80)', // the background colour of the menu
         activeFillColor: 'rgba(0,153,153, 0.80)', // the colour used to indicate the selected command
-        activePadding: 15, // additional size in pixels for the active command
-        indicatorSize: 15, // the size in pixels of the pointer to the active command
+        activePadding: 5, // additional size in pixels for the active command
+        indicatorSize: 0, // the size in pixels of the pointer to the active command
         separatorWidth: 2, // the empty spacing in pixels between successive commands
-        spotlightPadding: 2, // extra spacing in pixels between the element and the spotlight
-        minSpotlightRadius: 10, // the minimum radius in pixels of the spotlight
-        maxSpotlightRadius: 25, // the maximum radius in pixels of the spotlight
-        openMenuEvents: 'cxttapstart taphold', // space-separated cytoscape events that will open the menu; only `cxttapstart` and/or `taphold` work here
+        spotlightPadding: 10, // extra spacing in pixels between the element and the spotlight
+        minSpotlightRadius: 20, // the minimum radius in pixels of the spotlight
+        maxSpotlightRadius: 20, // the maximum radius in pixels of the spotlight
+        openMenuEvents: 'tap', // space-separated cytoscape events that will open the menu; only `cxttapstart` and/or `taphold` work here
+        
         itemColor: 'white', // the colour of text in the command's content
         itemTextShadowColor: 'transparent', // the text shadow colour of the command's content
         zIndex: 9999, // the z-index of the ui div
@@ -204,20 +190,20 @@ class CytoscapeGraph extends Component {
         const cy = cytoscape(conf);
         const menu = cy.cxtmenu(this.menu_defaults)
         cy.center()
-        cy.on('tap', 'node', (evt)=>{
-            var nodeId = evt.target.id();
-            this.props.handleNodeClick(nodeId)
-          });
-        // cy.on('select', 'node', (evt)=>{
-        //     evt.target.style({
-        //         'background-color': selectedNodeColor
-        //       });
-        //   });
-        // cy.on('unselect', 'node', (evt)=>{
-        //     evt.target.style({
-        //         'background-color': defaultNodeColor
-        //       });
-        //   });
+        cy.on('click', 'node', (evt)=>{
+            // var nodeId = evt.target.id();
+            // this.props.handleNodeClick(nodeId)
+        });
+        cy.on('mouseover', 'node', (e)=>{
+            var sel = e.target;
+            //cy.elements().difference(sel.outgoers()).not(sel).addClass('semitransp');
+            sel.addClass('highlight'); //.outgoers().addClass('highlight');
+        });
+        cy.on('mouseout', 'node', (e)=>{
+            var sel = e.target;
+            //cy.elements().removeClass('semitransp');
+            sel.removeClass('highlight'); //.outgoers().removeClass('highlight');
+        });
 
         this.state = { cy };
     }
@@ -225,11 +211,6 @@ class CytoscapeGraph extends Component {
     hideChildren = (target)=>{
         console.log(target)
         target.successors().targets().style("display", "none");
-       
-        // else {
-        //     //hide the children nodes and edges recursively
-        //     target.successors().targets().style("display", "none");
-        //     }
     }
 
     componentWillReceiveProps(nextProps) {
@@ -237,18 +218,7 @@ class CytoscapeGraph extends Component {
             // this.state.cy.destroy();
         }
         if(nextProps.lastChanged !== this.props.lastChanged)
-            this.updateGraph()
-        // conf.container = this.cyRef;
-        // conf.elements = nextProps.data;
-        // const cy = cytoscape(conf);
-        // const menu = cy.cxtmenu(menu_defaults)
-        // cy.center()
-        // cy.on('tap', 'node', function(evt){
-        //     var node = evt.target;
-        //     // console.log( 'tapped ' + node.id());
-        //     this.props.handleNodeClick(node().id)
-        //   });
-
+            this.updateGraph();
         // this.state = { cy };
     }
 
