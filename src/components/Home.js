@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab, Image, Popup } from 'semantic-ui-react';
+import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab, Image, Popup, Grid, Menu, Sidebar } from 'semantic-ui-react';
 import ReactJson from 'react-json-view';
 import InferenceGraph from './InferenceGraph';
 import CytoscapeGraph from './CytoscapeGraph';
@@ -17,8 +17,8 @@ class Home extends Component {
       query: '', templates: [], activeIndex: 10, alist: {}, alist_string: '',
       answer: {}, loading: false, final_answer_returned: false, partial_answer_returned: false, errorMessage: '', examplesOpen: false, sessionId: '',
       currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
-      blanketLength: 1, explanation:{all:'', what:'', how:'', why:''}, traceOpen:false, inferenceGraphOpen:false,
-      plotData:{},
+      blanketLength: 1, explanation:{all:'', what:'', how:'', why:''}, traceOpen:false,
+      plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: true
       // plotData: {
       //   "p": "population",
       //   "fp": "{\"function\" :[-5.2617682627407867E8,294139.066666669], \"data\":[[2017.0, 6.7118648E7],[2016.0, 6.6706879333333336E7],[2015.0, 6.6486984E7],[2014.0, 6.6316092E7],[2013.0, 6.5969263E7],[2012.0, 6.56546795E7],[2011.0, 6.53431815E7],[2010.0, 6.50253245E7],[2009.0, 6.47049825E7]]}",
@@ -36,8 +36,8 @@ class Home extends Component {
       "country with the largest population in 1998",
       "country in Europe with the lowest population in 2010"
     ]
-    // this.server_host = "34.242.204.151"; //;"remote"
-    this.server_host = "localhost"; //;"localhost"
+    this.server_host = "34.242.204.151"; //;"remote"
+    // this.server_host = "localhost"; //;"localhost"
     this.frank_api_endpoint = "http://" + this.server_host + ":9876";
     this.timer = this.timer.bind(this);
   }
@@ -191,7 +191,7 @@ class Home extends Component {
     fetch(`${this.frank_api_endpoint}/alist/${this.state.sessionId}/${nodeId}/blanketlength/${this.state.blanketLength}`, {})
       .then(result => result.json())
       .then(response => {
-        this.setState({ alist_node: response.alist, explanation: response.explanation, loadingSelectedAlist: false })
+        this.setState({ alist_node: response.alist, explanation: response.explanation, loadingSelectedAlist: false, sidebarVisible:true })
       })
   }
 
@@ -211,276 +211,314 @@ class Home extends Component {
 
     return (
       <div>
-        <Segment inverted secondary style={{ borderRadius: '0px', margin: '0px', background: '#2D3142' }}>
-          <div style={{ maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto' }}>
-            <br />
-            <Label as='a' content='Try these examples' icon='info'
-              onClick={() => this.setState({ examplesOpen: true })} style={{
-                marginBottom: 5, float: 'right',
-                background: '#252937', color: '#7B8893'
-              }} />
-            <div style={{ clear: 'both' }} />
-            <Form style={{ marginBottom: 0 }}>
-              <Form.Input className='no_input_focus'
-                value={this.state.query}
-                style={whiteBgStyle} size='large' transparent
-                placeholder='Type your question...'
-                action={
-                  <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
-                    style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
-                    <Icon name='search' />
-                  </Button>
-                }
-                list='templates'
-                onChange={this.handleChangeQuery.bind(this)}
-              />
-              {this.state.query.trim() !== "" &&
-                <div>
-                  <div style={{ background: '#404353', padding: 10, paddingTop: 20, marginTop: '-14px' }}>
-                    <p style={{ fontSize: 13, fontWeight: '700', color: '#A9BAC9' }}>
-                      Generated Alist
-                    <Popup inverted trigger={
-                        <Icon size='large' color='orange' name='question circle' style={{ marginTop: '-5px', marginLeft: '5px' }} />
-                      }
-                        content={<p> An alist is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.
-                      Attribute names:<ul>
-                            <li>h = operation</li>
-                            <li>v = operation variable</li>
-                            <li>s = subject</li>
-                            <li>p = property (or predicate)</li>
-                            <li>o = object</li>
-                            <li>t = time</li>
-                            <li>u = uncertainty</li>
-                            <li>xp = explanation</li>
-                          </ul></p>}
-                      />:
-                  </p>
-                    {/* <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p> */}
-                    <ReactJson src={this.state.alist} theme='monokai'
-                      displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
-                      style={{ padding: 10, background: '#404353', fontSize: 11 }} />
-                  </div>
-                </div>
+        <Menu stackable inverted={this.state.questionView}  secondary 
+                style={{borderRadius: '0px', margin: '0px', minHeight:'60px', background:this.state.questionView?'#2D3142':'#FFFFFF' }}>
+          <Menu.Item header>
+              <Header as='h1' style={{color:'#c1d2e1'}}>
+                <Image src={require('./../frank-logo.png')} centered style={{width: 90}}/>
+              </Header>
+          </Menu.Item>
+          <Menu.Item>
+              <Header.Subheader  style={{color:this.state.questionView?'#c1d2e1':'#2D3142', paddingBottom:3}}>
+                {this.state.questionView? "Functional Reasoning Acquires New Knowledge" : "Inference Explorer: " + this.state.query}
+                </Header.Subheader>
+              {this.state.questionView &&
+              <Label size='tiny' style={{
+                background:this.state.questionView?'#252937':'#E8EAED',
+                color:this.state.questionView?'#7B8893':'#6E6E6E' }}>v 0.2.0</Label>
               }
-            </Form>
-            <br />
-          </div>
-        </Segment>
-
-        <Modal
-          header='Examples of questions'
-          centered={false}
-          content={
-            <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
-              <List link >
-                {this.queryEx.map((ex, index) =>
-                  <List.Item as='a' key={index} onClick={this.handleExItemClick}
-                    style={{ color: 'black', fontSize: 15, margin: 5 }}>{ex}</List.Item>
-                )
-                }
-              </List>
-            </div>
+          </Menu.Item>
+          
+          {this.state.inferenceGraphView &&
+            <Menu.Item position='right' onClick={()=>this.setState({questionView:true, inferenceGraphView:false})} >
+              <Icon name='angle left' />
+              Return to question
+            </Menu.Item>
           }
-          open={this.state.examplesOpen}
-          onClose={() => this.setState({ examplesOpen: false })}
-          closeOnDimmerClick={true}
-          closeOnEscape={true}
-          actions={[{ key: 'close', content: 'Close', }]}
-        />
+        </Menu>
 
-
-        <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px', marginTop: '35px' }}>
-          {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned &&
-            <Image src='loading.svg' centered size='tiny' />
-          }
-          <div style={{ clear: 'both' }} />
-          {this.state.isError &&
-            <div style={{
-              borderRadius: '0px', padding: '20px',
-              border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
-            }}>
-              <span style={{ fontSize: 13 }}> <Icon name='exclamation triangle' color='yellow' size='large' /> {this.state.errorMessage} </span>
-            </div>
-          }
-          {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
-            <Segment style={{
-              borderRadius: '0px', paddingLeft: '20px', paddingBottom: 30,
-              background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
-            }}>
-              {this.state.loading &&
-                <Image src='loading.svg' centered size='tiny' style={{ objectFit: 'cover', height: '30px', float: 'right' }} />
-              }
-              <div>
-                <div style={{ fontSize: 15, fontFamily: 'Ubuntu Mono', marginBottom: 10, marginTop: 10 }} >
-                  {this.state.questionAnswered}
-                </div>
-                <Statistic style={{ float: 'left', marginRight: '30px', marginTop: '20px', marginBottom: 10, fontSize: '10px' }}>
-                  <div style={{ fontSize: 40, fontWeight: '400' }} >{this.state.answer.answer}</div>
-                </Statistic>
-
-                {parseFloat(this.state.answer.error_bar) > 0 &&
-                  <Statistic style={{ float: 'left', marginLeft: '10px', marginTop: '20px' }}>
-                    <Statistic.Label > &plusmn; {this.state.answer.error_bar}</Statistic.Label>
-                  </Statistic>
-                }
-              </div>
-              <div style={{ clear: 'both' }} />
-              {/* <Statistic horizontal>
-                
-               
-              </Statistic> */}
+        {/* Question view */}
+        {this.state.questionView &&
+          <div>
+          <Segment inverted secondary style={{ borderRadius: '0px', margin: '0px', background: '#2D3142' }}>
+            <div style={{ maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto' }}>
               <br />
-              <Label as='a' small='true' color='orange' style={{ marginTop: '2px' }}>
-                <Icon name='globe' />Sources
-                <Label.Detail>{this.state.answer.sources}</Label.Detail>
-              </Label>
+              <Label as='a' content='Try these examples' icon='info'
+                onClick={() => this.setState({ examplesOpen: true })} style={{
+                  marginBottom: 5, float: 'right',
+                  background: '#252937', color: '#7B8893'
+                }} />
+              <div style={{ clear: 'both' }} />
+              <Form style={{ marginBottom: 0 }}>
+                <Form.Input className='no_input_focus'
+                  value={this.state.query}
+                  style={whiteBgStyle} size='large' transparent
+                  placeholder='Type your question...'
+                  action={
+                    <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
+                      style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
+                      <Icon name='search' />
+                    </Button>
+                  }
+                  list='templates'
+                  onChange={this.handleChangeQuery.bind(this)}
+                />
+                {this.state.query.trim() !== "" &&
+                  <div>
+                    <div style={{ background: '#404353', padding: 10, paddingTop: 20, marginTop: '-14px' }}>
+                      <p style={{ fontSize: 13, fontWeight: '700', color: '#A9BAC9' }}>
+                        Generated Alist
+                      <Popup inverted trigger={
+                          <Icon size='large' color='orange' name='question circle' style={{ marginTop: '-5px', marginLeft: '5px' }} />
+                        }
+                          content={<p> An alist is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.
+                        Attribute names:<ul>
+                              <li>h = operation</li>
+                              <li>v = operation variable</li>
+                              <li>s = subject</li>
+                              <li>p = property (or predicate)</li>
+                              <li>o = object</li>
+                              <li>t = time</li>
+                              <li>u = uncertainty</li>
+                              <li>xp = explanation</li>
+                            </ul></p>}
+                        />:
+                    </p>
+                      {/* <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p> */}
+                      <ReactJson src={this.state.alist} theme='monokai'
+                        displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
+                        style={{ padding: 10, background: '#404353', fontSize: 11 }} />
+                    </div>
+                  </div>
+                }
+              </Form>
+              <br />
+            </div>
+          </Segment>
+        
+          <Modal
+            header='Examples of questions'
+            centered={false}
+            content={
+              <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
+                <List link >
+                  {this.queryEx.map((ex, index) =>
+                    <List.Item as='a' key={index} onClick={this.handleExItemClick}
+                      style={{ color: 'black', fontSize: 15, margin: 5 }}>{ex}</List.Item>
+                  )
+                  }
+                </List>
+              </div>
+            }
+            open={this.state.examplesOpen}
+            onClose={() => this.setState({ examplesOpen: false })}
+            closeOnDimmerClick={true}
+            closeOnEscape={true}
+            actions={[{ key: 'close', content: 'Close', }]}
+          />
 
-              <Label as='a' small='true' color='grey' style={{ marginTop: '2px' }}>
-                <Icon name='hourglass end' /> Elapsed Time
-                <Label.Detail>{this.state.answer.elapsed_time}</Label.Detail>
-              </Label>
 
-              {isNullOrUndefined(this.state.answer.alist.xp) === false &&
-                <div style={{marginTop:20,}}>
-                  <span style={{fontWeight:600}}>Explanation:</span> {this.state.answer.alist.xp}
+          <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px', marginTop: '35px' }}>
+            {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned &&
+              <Image src='loading.svg' centered size='tiny' />
+            }
+            <div style={{ clear: 'both' }} />
+            {this.state.isError &&
+              <div style={{
+                borderRadius: '0px', padding: '20px',
+                border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
+              }}>
+                <span style={{ fontSize: 13 }}> <Icon name='exclamation triangle' color='yellow' size='large' /> {this.state.errorMessage} </span>
+              </div>
+            }
+            {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+              <Segment style={{
+                borderRadius: '0px', paddingLeft: '20px', paddingBottom: 30,
+                background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
+              }}>
+                {this.state.loading &&
+                  <Image src='loading.svg' centered size='tiny' style={{ objectFit: 'cover', height: '30px', float: 'right' }} />
+                }
+                <div>
+                  <div style={{ fontSize: 15, fontFamily: 'Ubuntu Mono', marginBottom: 10, marginTop: 10 }} >
+                    {this.state.questionAnswered}
+                  </div>
+                  <Statistic style={{ float: 'left', marginRight: '30px', marginTop: '20px', marginBottom: 10, fontSize: '10px' }}>
+                    <div style={{ fontSize: 40, fontWeight: '400' }} >{this.state.answer.answer}</div>
+                  </Statistic>
+
+                  {parseFloat(this.state.answer.error_bar) > 0 &&
+                    <Statistic style={{ float: 'left', marginLeft: '10px', marginTop: '20px' }}>
+                      <Statistic.Label > &plusmn; {this.state.answer.error_bar}</Statistic.Label>
+                    </Statistic>
+                  }
                 </div>
+                <div style={{ clear: 'both' }} />
+                {/* <Statistic horizontal>
+                  
                 
-              }
+                </Statistic> */}
+                <br />
+                <Label as='a' small='true' color='orange' style={{ marginTop: '2px' }}>
+                  <Icon name='globe' />Sources
+                  <Label.Detail>{this.state.answer.sources}</Label.Detail>
+                </Label>
 
-            </Segment>
-            
-          }
+                <Label as='a' small='true' color='grey' style={{ marginTop: '2px' }}>
+                  <Icon name='hourglass end' /> Elapsed Time
+                  <Label.Detail>{this.state.answer.elapsed_time}</Label.Detail>
+                </Label>
 
-        {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
-            <Segment style={{
-              borderRadius: '0px', paddingLeft: '20px', paddingBottom: 0,
-              background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', fontFamily: 'Ubuntu Mono', marginLeft: 'auto', marginRight: 'auto'
-            }}>
-              <b>Answer Alist</b><br />
-              {/* {JSON.stringify(this.state.answer.alist)} */}
-              <ReactJson src={this.state.answer.alist} theme='shapeshifter:inverted'
-                displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
-                style={{ padding: 10, background: '#FFF', fontSize: 11 }} />
+                {isNullOrUndefined(this.state.answer.alist.xp) === false &&
+                  <div style={{marginTop:20,}}>
+                    <span style={{fontWeight:600}}>Explanation:</span> {this.state.answer.alist.xp}
+                  </div>
+                  
+                }
 
-            </Segment>
-          }
+              </Segment>
+              
+            }
 
           {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
-            <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
-              <Modal
-                trigger={<Button basic color='teal' onClick={()=>this.setState({inferenceGraphOpen:true})}>Inference Graph</Button>}
-                centered={false}
-                open={this.state.inferenceGraphOpen}
-                onClose={() => this.setState({ inferenceGraphOpen: false })}
-                closeOnDimmerClick={true}
-                closeOnEscape={true}
-                size='fullscreen' dimmer='blurring'
-              >
-              {/* <Modal.Header>Inference Graph</Modal.Header> */}
-                <Modal.Content scrolling style={{maxHeight:'calc(95vh)'}}>
-                  <div style={{ borderRadius: '0px', padding: '0px', border: 'none' }}>
-                  
-                  {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
-                        isNullOrUndefined(this.state.answer.graph_nodes) === false &&
-                        isNullOrUndefined(this.state.answer.graph_edges) === false &&
-                        this.state.answer.graph_nodes.length > 0 &&
-                        <div>
-                          <div style={{
-                            borderRadius: '0px', paddingLeft: '0px', marginTop: 0, marginBottom: 0, background: '#fff',
-                            border: 'none', color: '#000', fontFamily: 'Ubuntu Mono', minHeight: 50
-                          }}>
+              <Segment style={{
+                borderRadius: '0px', paddingLeft: '20px', paddingBottom: 0,
+                background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', fontFamily: 'Ubuntu Mono', marginLeft: 'auto', marginRight: 'auto'
+              }}>
+                <b>Answer Alist</b><br />
+                {/* {JSON.stringify(this.state.answer.alist)} */}
+                <ReactJson src={this.state.answer.alist} theme='shapeshifter:inverted'
+                  displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
+                  style={{ padding: 10, background: '#FFF', fontSize: 11 }} />
+
+              </Segment>
+            }
+
+            {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+              <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
+                <Button basic color='teal' 
+                  onClick={()=>this.setState({inferenceGraphView:true, questionView:false, alist_node: {}, 
+                            explanation:{all:'', what:'', how:'', why:''}, loadingSelectedAlist: false})
+                  }>
+                    Inference Graph
+                </Button>
                             
-                            <div style={{marginTop: 5, marginBottom:10}}>
-                              <span  style={{float:'left', marginLeft: 0, paddingTop:0}}>Explanation Blanket Length:</span>
-                              <NumericInput min={1} max={30} value={this.state.blanketLength} onChange={this.handleBlanketLengthChange.bind(this)} 
-                                style={{input: {width:50}, float:'left', marginLeft: 7}}/>
-                            </div>
-                            {(this.state.loadingSelectedAlist || this.state.loading) &&
-                              <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px' }} />
-                            }
-                            <div style={{clear:'both', marginTop:10}} />
-                            {!this.state.loadingSelectedAlist && this.state.alist_node &&
-                              <div> 
-                                {Object.keys(this.state.alist_node).length > 0 &&
-                                  <div style={{ float: 'left' }}><span style={{fontWeight: 600}}>Alist: </span>{JSON.stringify(this.state.alist_node)}</div>
-                                }
-                                <div style={{clear:'both', marginTop:10}} />
-                                {this.state.explanation.all.length > 0 &&
-                                  <div style={{ float: 'left' }}><span style={{fontWeight: 600}}>Explanation: </span>{this.state.explanation.all}</div>
-                                }
-                              </div>
-                            }
 
-                            <div style={{ clear: 'both' }} />
-                            {!this.state.loadingSelectedAlist && <FrankChart alist={this.state.alist_node} />}
-                          </div>
-
-                          {/* <InferenceGraph nodes={this.state.answer.graph_nodes} edges={this.state.answer.graph_edges} handleNodeClick={this.handleNodeClick.bind(this)} /> */}
-                          <CytoscapeGraph 
-                            data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} height='800px'
-                            handleNodeClick={this.handleNodeClick.bind(this)} lastChanged={this.state.answer_data_last_changed} />
-                        </div>
-
-                      }
-                  </div>
-                </Modal.Content>
-                <Modal.Actions style={{paddingTop:5, paddingBottom:5}}>
-                  <Button size='mini' onClick={() => this.setState({ inferenceGraphOpen: false })}>
-                    Close
-                  </Button>
-                </Modal.Actions>
-              </Modal>
-             
-
-              <Modal
-                trigger={<Button basic color='teal' onClick={()=>this.setState({traceOpen:true})}>Trace</Button>}
-                centered={false}
-                open={this.state.traceOpen}
-                onClose={() => this.setState({ traceOpen: false })}
-                closeOnDimmerClick={true}
-                closeOnEscape={true}
-                size='fullscreen' dimmer='blurring'
-              >
-                <Modal.Header>Inference Trace</Modal.Header>
-                <Modal.Content scrolling>
-                  <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
-                    <List divided relaxed size='tiny'>
-                        {isNullOrUndefined(this.state.answer.trace) === false ?
-                          this.state.answer.trace.map((item, index) => { return <List.Item key={index} >{item}</List.Item> })
-                          : ""}
-                    </List>
-                  </div>
-                </Modal.Content>
-                <Modal.Actions>
-                  <Button onClick={() => this.setState({ traceOpen: false })}>
-                    Close
-                  </Button>
-                </Modal.Actions>
-              </Modal>
-
-            </div>
-          }
-
-          
-
-
-          {!this.state.final_answer_returned && this.state.timedOut && !this.state.isError &&
-            <div style={{
-              borderRadius: '0px', paddingLeft: '0px',
-              border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
-            }}>
-              <div style={{ padding: 10, paddingLeft: 0, color: 'orange' }}>
-                <span> <Icon name='clock' style={{ fontSize: 20 }} /> FRANK timed out.</span>
+                <Modal
+                  trigger={<Button basic color='teal' onClick={()=>this.setState({traceOpen:true})}>Trace</Button>}
+                  centered={false}
+                  open={this.state.traceOpen}
+                  onClose={() => this.setState({ traceOpen: false })}
+                  closeOnDimmerClick={true}
+                  closeOnEscape={true}
+                  size='fullscreen' dimmer='blurring'
+                >
+                  <Modal.Header>Inference Trace</Modal.Header>
+                  <Modal.Content scrolling>
+                    <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
+                      <List divided relaxed size='tiny'>
+                          {isNullOrUndefined(this.state.answer.trace) === false ?
+                            this.state.answer.trace.map((item, index) => { return <List.Item key={index} >{item}</List.Item> })
+                            : ""}
+                      </List>
+                    </div>
+                  </Modal.Content>
+                  <Modal.Actions>
+                    <Button onClick={() => this.setState({ traceOpen: false })}>
+                      Close
+                    </Button>
+                  </Modal.Actions>
+                </Modal>
 
               </div>
+            }
 
-            </div>
-          }
+            {!this.state.final_answer_returned && this.state.timedOut && !this.state.isError &&
+              <div style={{
+                borderRadius: '0px', paddingLeft: '0px',
+                border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
+              }}>
+                <div style={{ padding: 10, paddingLeft: 0, color: 'orange' }}>
+                  <span> <Icon name='clock' style={{ fontSize: 20 }} /> FRANK timed out.</span>
 
+                </div>
 
-          
-        </Segment>
+              </div>
+            }
+          </Segment>
+        </div>
+        }
         
+        {/* Inference graph view */}
+        {this.state.inferenceGraphView &&
+          <Sidebar.Pushable as={Segment} style={{borderWidth:0, margin:0, marginBottom:'-65px', borderRadius:0, height:'100vh', overflow:'hidden'}}>
+            <Sidebar
+              as={Segment}
+              animation='push'
+              direction='left'
+              visible={this.state.sidebarVisible}
+              width='very wide'
+              style={{borderWidth:0, margin:0, borderRadius:0, width:600}}
+            >
+              <div style={{
+                  borderRadius: '0px', paddingLeft: '10px', marginTop: 0, marginBottom: 0,
+                  border: 'none', color: '#000', fontFamily: 'Ubuntu Mono', minHeight: 50
+                }}>
+                  
+                  <div style={{paddingTop: 10, marginBottom:10}}>
+                    <span  style={{float:'left', marginLeft: 0, paddingTop:0}}>Explanation Blanket Length:</span>
+                    <NumericInput min={1} max={30} value={this.state.blanketLength} onChange={this.handleBlanketLengthChange.bind(this)} 
+                      style={{input: {width:50}, float:'left', marginLeft: 7}}/>
+                  </div>
+                  {(this.state.loadingSelectedAlist || this.state.loading) &&
+                    <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px' }} />
+                  }              
+
+                  <div style={{ clear: 'both' }} />
+  
+                      {!this.state.loadingSelectedAlist && this.state.alist_node &&
+                        <div> 
+                          {this.state.explanation.all.length > 0 &&
+                            <div style={{ float: 'left' }}><span style={{fontWeight: 600}}>Explanation: </span>{this.state.explanation.all}</div>
+                          }
+                          <div style={{clear:'both', marginTop:15}} />
+                          {!this.state.loadingSelectedAlist && <FrankChart alist={this.state.alist_node} />}
+                          {Object.keys(this.state.alist_node).length > 0 &&
+                            // <div style={{ float: 'left', marginBottom:10 }}><span style={{fontWeight: 600}}>Alist: </span>{JSON.stringify(this.state.alist_node)}</div>
+                            <div>
+                              <div style={{fontWeight: 600, marginTop:30}}>Selected node alist</div>
+                              <ReactJson src={this.state.alist_node} theme='shapeshifter:inverted'
+                                displayDataTypes={false} displayObjectSize={false} name={false} collapsed={false}
+                                style={{ padding: 10, background: '#FFF', fontSize: 11 }} />
+                            </div>
+                          }
+                        </div>
+                      }
+                                          
+                </div>
+            </Sidebar>
+            <Sidebar.Pusher>
+            <div>
+            {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+              isNullOrUndefined(this.state.answer.graph_nodes) === false &&
+              isNullOrUndefined(this.state.answer.graph_edges) === false &&
+              this.state.answer.graph_nodes.length > 0 &&
+              <div style={{background: '#F5F5F5'}}>
+                
+                <Button basic size='tiny' onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='sidebar' 
+                  style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 125 : 0}}>
+                  {this.state.sidebarVisible? "Hide sidebar" : "Show sidebar"}
+                </Button>
+                {/* <span style={{fontWeight:300, paddingLeft:50}}>{this.state.query}</span> */}
+                <CytoscapeGraph 
+                  data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} height='85vh'
+                  handleNodeClick={this.handleNodeClick.bind(this)} lastChanged={this.state.answer_data_last_changed} />
+              </div>
+            }
+            </div>
+            </Sidebar.Pusher>
+          </Sidebar.Pushable>
+        }
       </div>
     );
   }
