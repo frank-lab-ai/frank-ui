@@ -11,3 +11,16 @@
   font-family: ubuntu-mono  !important;
   color: #fff !important;
 }
+
+/* .ui.sidebar {
+  width: 600px !important;
+  margin-left: -600px !important;
+} */
+
+/* .ui.active.sidebar {
+  margin-left: 0px !important;
+}
+
+.ui.active.right.sidebar {
+  margin-left: -600px !important;
+} */

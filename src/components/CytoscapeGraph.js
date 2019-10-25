@@ -79,7 +79,7 @@ let conf = {
                 'target-arrow-shape': 'triangle',
                 'line-color': "#B2B2B2",
                 'font-size': 10,
-                'target-arrow-color': "gray[700]",
+                //'target-arrow-color': "gray[700]",
                 "text-rotation": "autorotate",
                 "text-border-style": "solid",
                 "text-border-style": "3px",
@@ -127,8 +127,10 @@ class CytoscapeGraph extends Component {
                               //console.log( ele.id() ) // `ele` holds the reference to the active element
               var hiddenOutgoers = ele.outgoers().targets().filter((x)=>x.style("display") == "none")
 
-              if (hiddenOutgoers.length > 0)
+              if (hiddenOutgoers.length > 0){
                 ele.outgoers().targets().style("display", "element");
+                ele.connectedEdges().targets().style("display","element")
+              }
               else
                 ele.successors().targets().style("display", "none");
               
