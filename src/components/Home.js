@@ -212,7 +212,7 @@ class Home extends Component {
     return (
       <div>
         <Menu stackable inverted={this.state.questionView}  secondary 
-                style={{borderRadius: '0px', margin: '0px', minHeight:'60px', background:this.state.questionView?'#2D3142':'#FFFFFF' }}>
+                style={{borderRadius: '0px', margin: '0px', minHeight:'60px', background:this.state.questionView?'#2D3142':'#FFFFFF', zIndex: 9909 }}>
           <Menu.Item header>
               <Header as='h1' style={{color:'#c1d2e1'}}>
                 <Image src={require('./../frank-logo.png')} centered style={{width: 90}}/>
@@ -451,14 +451,15 @@ class Home extends Component {
         
         {/* Inference graph view */}
         {this.state.inferenceGraphView &&
-          <Sidebar.Pushable as={Segment} style={{borderWidth:0, margin:0, marginBottom:'-65px', borderRadius:0, height:'100vh', overflow:'hidden'}}>
+          <Sidebar.Pushable as={Segment} style={{borderWidth:0, margin:0, marginBottom:'-65px', borderRadius:0, height:'100vh', width:'100%', overflow:'hidden', 
+            position: 'absolute', bottom:0, zIndex: 1}}>
             <Sidebar
               as={Segment}
               animation='push'
               direction='left'
               visible={this.state.sidebarVisible}
               width='very wide'
-              style={{borderWidth:0, margin:0, borderRadius:0, width:600}}
+              style={{borderWidth:0, margin:0, borderRadius:0, width:600, position:'absolute', bottom:0}}
             >
               <div style={{
                   borderRadius: '0px', paddingLeft: '10px', marginTop: 0, marginBottom: 0,
@@ -503,15 +504,12 @@ class Home extends Component {
               isNullOrUndefined(this.state.answer.graph_nodes) === false &&
               isNullOrUndefined(this.state.answer.graph_edges) === false &&
               this.state.answer.graph_nodes.length > 0 &&
-              <div style={{background: '#F5F5F5'}}>
+              <div style={{background: '#F5F5F5', position:'absolute', bottom:0, width:'100%'}}>
                 
-                <Button basic size='tiny' onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='sidebar' 
-                  style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 125 : 0}}>
-                  {this.state.sidebarVisible? "Hide sidebar" : "Show sidebar"}
-                </Button>
-                {/* <span style={{fontWeight:300, paddingLeft:50}}>{this.state.query}</span> */}
+                <Button onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='bars' 
+                  style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 125 : 0, position:'absolute', zIndex:9999}} />
                 <CytoscapeGraph 
-                  data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} height='85vh'
+                  data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} height='100vh'
                   handleNodeClick={this.handleNodeClick.bind(this)} lastChanged={this.state.answer_data_last_changed} />
               </div>
             }

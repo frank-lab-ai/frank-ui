@@ -29,7 +29,7 @@ let conf = {
             style: {
                 'active-bg-size': 0
             }
-        },
+        },        
         {
             selector: 'node',
             style: {
@@ -41,10 +41,30 @@ let conf = {
                 'font-size': 11,
                 'background-color': defaultNodeColor,
                 "selection-box-opacity": 0,
-                "height":50,
-                "width": 50,
+                "height":45,
+                "width": 45,
                 "border-style":"solid",
                 "border-color":"#dc681a",
+                "border-width":2,  
+
+            }
+        },
+        {
+            selector: 'node[ntype = "hnode"]',
+            style: {
+                'content': 'data(label)',
+                "shape" : 'round-rectangle',
+                'text-opacity': 1,
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'color': 'black',
+                'font-size': 11,
+                'background-color': '#F5F5F5',
+                "selection-box-opacity": 0,
+                "height":25,
+                "width": 45,
+                "border-style":"solid",
+                "border-color":"#00938A",
                 "border-width":2,  
 
             }
