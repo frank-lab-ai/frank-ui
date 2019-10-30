@@ -18,7 +18,7 @@ class Home extends Component {
       answer: {}, loading: false, final_answer_returned: false, partial_answer_returned: false, errorMessage: '', examplesOpen: false, sessionId: '',
       currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
       blanketLength: 1, explanation:{all:'', what:'', how:'', why:''}, traceOpen:false,
-      plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: true
+      plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false
       // plotData: {
       //   "p": "population",
       //   "fp": "{\"function\" :[-5.2617682627407867E8,294139.066666669], \"data\":[[2017.0, 6.7118648E7],[2016.0, 6.6706879333333336E7],[2015.0, 6.6486984E7],[2014.0, 6.6316092E7],[2013.0, 6.5969263E7],[2012.0, 6.56546795E7],[2011.0, 6.53431815E7],[2010.0, 6.50253245E7],[2009.0, 6.47049825E7]]}",
@@ -507,7 +507,7 @@ class Home extends Component {
               <div style={{background: '#F5F5F5', position:'absolute', bottom:0, width:'100%'}}>
                 
                 <Button onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='bars' 
-                  style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 125 : 0, position:'absolute', zIndex:9999}} />
+                  style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 125 : 0, position:'absolute', zIndex:9999 }} />
                 <CytoscapeGraph 
                   data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} height='100vh'
                   handleNodeClick={this.handleNodeClick.bind(this)} lastChanged={this.state.answer_data_last_changed} />

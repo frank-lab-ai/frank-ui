@@ -20,8 +20,9 @@ let conf = {
     // boxSelectionEnabled: true,
     // autounselectify: true,
     zoomingEnabled: true,
-    minZoom: 0.5,
+    minZoom: 0.4,
     maxZoom: 5,
+    zoom: 0.7,
     wheelSensitivity: 0.5,
     style: [
         {
