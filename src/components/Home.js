@@ -182,7 +182,8 @@ class Home extends Component {
       final_answer_returned: isFinal,
       loading: !isFinal,
       isError: false,
-      partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.alist)
+      partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.alist),
+      // answer_data_last_changed:new Date().getTime() // remove to stop automatic refresh of inference graphs 
     })
   }
 
@@ -220,21 +221,32 @@ class Home extends Component {
           </Menu.Item>
           <Menu.Item>
               <Header.Subheader  style={{color:this.state.questionView?'#c1d2e1':'#2D3142', paddingBottom:10}}>
-                {this.state.questionView? "Functional Reasoning Acquires New Knowledge" : <span><span style={{fontWeight:700, marginRight: 20}}>Inference Explorer</span> {"Q:" + this.state.query} </span>}
+                {this.state.questionView? "Functional Reasoning Acquires New Knowledge" : <span><span style={{fontWeight:700, marginRight: 30, color:'#009999'}}>Inference Explorer</span> {this.state.query} </span>}
                 </Header.Subheader>
               {/* {this.state.questionView &&
               <Label size='tiny' style={{
                 background:this.state.questionView?'#252937':'#E8EAED',
                 color:this.state.questionView?'#7B8893':'#6E6E6E', marginBottom: 10 }}>v 0.2.0</Label>
               } */}
+              {this.state.inferenceGraphView && (this.state.loadingSelectedAlist || this.state.loading) &&
+                  <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px', marginLeft: 10 }} />
+              }  
           </Menu.Item>
           
           {this.state.inferenceGraphView &&
-            <Menu.Item position='right' onClick={()=>this.setState({questionView:true, inferenceGraphView:false})} >
-              <Icon name='angle left' />
-              Return to question
-            </Menu.Item>
+            <Menu.Menu stackable inverted={this.state.questionView} secondary position='right'>
+              <Menu.Item  onClick={()=>{this.checkForAnswer(); this.setState({answer_data_last_changed:new Date().getSeconds()})} } >
+                <Icon name='refresh' />
+                Refresh
+              </Menu.Item>
+              <Menu.Item onClick={()=>this.setState({questionView:true, inferenceGraphView:false})} >
+                <Icon name='edit outline' />
+                Return to question
+              </Menu.Item>
+            </Menu.Menu>
           }
+          
+          
         </Menu>
 
         {/* Question view */}
@@ -394,7 +406,8 @@ class Home extends Component {
               </Segment>
             }
 
-            {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+            {/* {(this.state.final_answer_returned || this.state.partial_answer_returned) && */}
+            {(this.state.currentCount > 0) &&
               <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
                 <Button basic color='teal' 
                   onClick={()=>this.setState({inferenceGraphView:true, questionView:false, alist_node: {}, 
@@ -451,29 +464,30 @@ class Home extends Component {
         
         {/* Inference graph view */}
         {this.state.inferenceGraphView &&
-          <Sidebar.Pushable as={Segment} style={{borderWidth:0, margin:0, marginBottom:'-65px', borderRadius:0, height:'100vh', width:'100%', overflow:'hidden', 
+          <Sidebar.Pushable as={Segment} style={{borderWidth:0, margin:0, marginBottom:'-60px', borderRadius:0, height:'100vh', width:'100%', overflow:'hidden', 
             position: 'absolute', bottom:0, zIndex: 1}}>
             <Sidebar
               as={Segment}
-              animation='push'
+              animation='overlay'
               direction='left'
               visible={this.state.sidebarVisible}
               width='very wide'
-              style={{borderWidth:0, margin:0, borderRadius:0, width:600, position:'absolute', bottom:0}}
+              style={{borderWidth:0, margin:0, borderRadius:0, width:540, position:'absolute', bottom:0, paddingBottom:65}}
             >
               <div style={{
                   borderRadius: '0px', paddingLeft: '10px', marginTop: 0, marginBottom: 0,
-                  border: 'none', color: '#000', fontFamily: 'Ubuntu Mono', minHeight: 50
+                  border: 'none', color: '#000', minHeight: 50
                 }}>
-                  
+
+                  <Button color='white' onClick={()=>this.setState({sidebarVisible: false})} icon='angle left' content='Hide'
+                    style={{borderRadius:0, marginTop:'-10px', background: 'transparent', paddingLeft: 0}} /> 
+
                   <div style={{paddingTop: 10, marginBottom:10}}>
                     <span  style={{float:'left', marginLeft: 0, paddingTop:0}}>Explanation Blanket Length:</span>
                     <NumericInput min={1} max={30} value={this.state.blanketLength} onChange={this.handleBlanketLengthChange.bind(this)} 
                       style={{input: {width:80}, float:'left', marginLeft: 7}}/>
                   </div>
-                  {(this.state.loadingSelectedAlist || this.state.loading) &&
-                    <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px' }} />
-                  }              
+                              
 
                   <div style={{ clear: 'both' }} />
   
@@ -483,7 +497,9 @@ class Home extends Component {
                             <div style={{ float: 'left' }}><span style={{fontWeight: 600}}>Explanation: </span>{this.state.explanation.all}</div>
                           }
                           <div style={{clear:'both', marginTop:15}} />
-                          {!this.state.loadingSelectedAlist && <FrankChart alist={this.state.alist_node} />}
+                          {!this.state.loadingSelectedAlist && this.state.alist_node.h === "regress" && 
+                            <FrankChart alist={this.state.alist_node} />
+                          }
                           {Object.keys(this.state.alist_node).length > 0 &&
                             // <div style={{ float: 'left', marginBottom:10 }}><span style={{fontWeight: 600}}>Alist: </span>{JSON.stringify(this.state.alist_node)}</div>
                             <div>
@@ -500,14 +516,21 @@ class Home extends Component {
             </Sidebar>
             <Sidebar.Pusher>
             <div>
-            {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+            {
+              // (this.state.final_answer_returned || this.state.partial_answer_returned) &&
               isNullOrUndefined(this.state.answer.graph_nodes) === false &&
               isNullOrUndefined(this.state.answer.graph_edges) === false &&
               this.state.answer.graph_nodes.length > 0 &&
               <div style={{background: '#F7F7F7', position:'absolute', bottom:0, width:'100%'}}>
                 
-                <Button onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='bars' 
-                  style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 125 : 0, position:'absolute', zIndex:9999 }} />
+                
+                <Button.Group style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 65 : 0, position:'absolute', zIndex:9999 }}>
+                  {this.state.sidebarVisible === false &&
+                    <Button onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='bars' style={{borderRadius:0}} />
+                  }
+                  {/* <Button onClick={()=>this.checkForAnswer.bind(this)} icon='refresh' style={{borderRadius:0}} /> */}
+                </Button.Group>
+                
                 <CytoscapeGraph 
                   data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} height='100vh'
                   handleNodeClick={this.handleNodeClick.bind(this)} lastChanged={this.state.answer_data_last_changed} />

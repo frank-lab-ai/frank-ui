@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import cytoscape from 'cytoscape';
 import cydagre from 'cytoscape-dagre';
 import cxtmenu from 'cytoscape-cxtmenu';
-
 // cydagre(cytoscape);
 // cxtmenu(cytoscape)
 cytoscape.use(cydagre)
@@ -44,7 +43,7 @@ let conf = {
                 'color': 'white',
                 'font-size': 11,
                 'background-color': unreducedNodeColor,
-                "selection-box-opacity": 0,
+                "selection-box-opacity": 0.1,
                 "height":45,
                 "width": 45,
                 "border-style":"solid",
@@ -71,7 +70,7 @@ let conf = {
                 'color': 'black',
                 'font-size': 11,
                 'background-color': '#F5F5F5',
-                "selection-box-opacity": 0,
+                "selection-box-opacity": 0.1,
                 "height":25,
                 "width": 45,
                 "border-style":"solid",
@@ -221,11 +220,11 @@ class CytoscapeGraph extends Component {
         spotlightPadding: 10, // extra spacing in pixels between the element and the spotlight
         minSpotlightRadius: 20, // the minimum radius in pixels of the spotlight
         maxSpotlightRadius: 20, // the maximum radius in pixels of the spotlight
-        openMenuEvents: 'tap', // space-separated cytoscape events that will open the menu; only `cxttapstart` and/or `taphold` work here
+        openMenuEvents: 'cxttap ctxtapstart taphold', // space-separated cytoscape events that will open the menu; only `cxttapstart` and/or `taphold` work here
         
         itemColor: 'white', // the colour of text in the command's content
         itemTextShadowColor: 'transparent', // the text shadow colour of the command's content
-        zIndex: 9999, // the z-index of the ui div
+        zIndex: 1, // the z-index of the ui div
         atMouse: false // draw menu at mouse position
       };
 
@@ -249,14 +248,14 @@ class CytoscapeGraph extends Component {
             // this.props.handleNodeClick(nodeId)
         });
         cy.on('mouseover', 'node', (e)=>{
-            var sel = e.target;
-            //cy.elements().difference(sel.outgoers()).not(sel).addClass('semitransp');
-            sel.addClass('highlight'); //.outgoers().addClass('highlight');
+            // var sel = e.target;
+            // //cy.elements().difference(sel.outgoers()).not(sel).addClass('semitransp');
+            // sel.addClass('highlight'); //.outgoers().addClass('highlight');
         });
         cy.on('mouseout', 'node', (e)=>{
-            var sel = e.target;
-            //cy.elements().removeClass('semitransp');
-            sel.removeClass('highlight'); //.outgoers().removeClass('highlight');
+            // var sel = e.target;
+            // //cy.elements().removeClass('semitransp');
+            // sel.removeClass('highlight'); //.outgoers().removeClass('highlight');
         });
 
         this.state = { cy };
