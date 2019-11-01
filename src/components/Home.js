@@ -219,14 +219,14 @@ class Home extends Component {
               </Header>
           </Menu.Item>
           <Menu.Item>
-              <Header.Subheader  style={{color:this.state.questionView?'#c1d2e1':'#2D3142', paddingBottom:3}}>
-                {this.state.questionView? "Functional Reasoning Acquires New Knowledge" : "Inference Explorer: " + this.state.query}
+              <Header.Subheader  style={{color:this.state.questionView?'#c1d2e1':'#2D3142', paddingBottom:10}}>
+                {this.state.questionView? "Functional Reasoning Acquires New Knowledge" : <span><span style={{fontWeight:700, marginRight: 20}}>Inference Explorer</span> {"Q:" + this.state.query} </span>}
                 </Header.Subheader>
-              {this.state.questionView &&
+              {/* {this.state.questionView &&
               <Label size='tiny' style={{
                 background:this.state.questionView?'#252937':'#E8EAED',
-                color:this.state.questionView?'#7B8893':'#6E6E6E' }}>v 0.2.0</Label>
-              }
+                color:this.state.questionView?'#7B8893':'#6E6E6E', marginBottom: 10 }}>v 0.2.0</Label>
+              } */}
           </Menu.Item>
           
           {this.state.inferenceGraphView &&
@@ -469,7 +469,7 @@ class Home extends Component {
                   <div style={{paddingTop: 10, marginBottom:10}}>
                     <span  style={{float:'left', marginLeft: 0, paddingTop:0}}>Explanation Blanket Length:</span>
                     <NumericInput min={1} max={30} value={this.state.blanketLength} onChange={this.handleBlanketLengthChange.bind(this)} 
-                      style={{input: {width:50}, float:'left', marginLeft: 7}}/>
+                      style={{input: {width:80}, float:'left', marginLeft: 7}}/>
                   </div>
                   {(this.state.loadingSelectedAlist || this.state.loading) &&
                     <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px' }} />
@@ -504,7 +504,7 @@ class Home extends Component {
               isNullOrUndefined(this.state.answer.graph_nodes) === false &&
               isNullOrUndefined(this.state.answer.graph_edges) === false &&
               this.state.answer.graph_nodes.length > 0 &&
-              <div style={{background: '#F5F5F5', position:'absolute', bottom:0, width:'100%'}}>
+              <div style={{background: '#F7F7F7', position:'absolute', bottom:0, width:'100%'}}>
                 
                 <Button onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='bars' 
                   style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 125 : 0, position:'absolute', zIndex:9999 }} />

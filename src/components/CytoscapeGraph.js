@@ -13,7 +13,10 @@ cytoscape.use( cxtmenu );
 //     display: 'block'
 // };
 
-let  defaultNodeColor = "#F48D49";
+let defaultNodeColor = "#F48D49";
+let defaultNodeBorderColor = "#dc681a";
+let unreducedNodeColor = "#838383";
+let unreducedNodeBorderColor = "#828282"
 let  selectedNodeColor = "#F2711C";
 let  nodeHighlightColor = "#F2711C";
 let conf = {
@@ -40,15 +43,22 @@ let conf = {
                 'text-halign': 'center',
                 'color': 'white',
                 'font-size': 11,
-                'background-color': defaultNodeColor,
+                'background-color': unreducedNodeColor,
                 "selection-box-opacity": 0,
                 "height":45,
                 "width": 45,
                 "border-style":"solid",
-                "border-color":"#dc681a",
+                "border-color": unreducedNodeBorderColor,
                 "border-width":2,  
 
             }
+        },
+        {
+            selector: 'node[nstate = 2]',
+            style: {
+                "background-color":defaultNodeColor,
+                "border-color": defaultNodeBorderColor
+            },
         },
         {
             selector: 'node[ntype = "hnode"]',
@@ -68,7 +78,7 @@ let conf = {
                 "border-color":"#00938A",
                 "border-width":2,  
 
-            }
+            },
         },
         {
             selector: ':active',
@@ -103,11 +113,31 @@ let conf = {
                 //'target-arrow-color': "gray[700]",
                 "text-rotation": "autorotate",
                 "text-border-style": "solid",
-                "text-border-style": "3px",
-                "text-border-color": "white",
+                "text-border-style": "6px",
+                "text-border-color": "#F7F7F7",
                 "text-border-opacity": 0.9,
                 'label': 'data(label)',
-                'text-background-color' :'white',
+                'text-background-color' :'#F7F7F7',
+                'text-background-opacity': 0.9,
+            }
+        },
+        {
+            selector: 'edge[label = "set_comp"]',
+            style: {
+                'width': 2,
+                "curve-style": "unbundled-bezier",
+                'target-arrow-shape': 'triangle',
+                'target-arrow-fill': 'hollow',
+                'line-color': "#B2B2B2",
+                'line-style':'dashed',
+                'font-size': 10,
+                "text-rotation": "autorotate",
+                "text-border-style": "solid",
+                "text-border-style": "6px",
+                "text-border-color": "#F7F7F7",
+                "text-border-opacity": 0.9,
+                'label': 'data(label)',
+                'text-background-color' :'#F7F7F7',
                 'text-background-opacity': 0.9,
             }
         }
@@ -115,6 +145,7 @@ let conf = {
     layout: {
         name: 'dagre',
         fit: false,
+        spacingFactor: 1.2
     }
 };
 
