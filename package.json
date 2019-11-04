@@ -9,6 +9,7 @@
     "cytoscape-dagre": "^2.2.2",
     "d3": "^5.9.1",
     "d3-drag": "^1.2.3",
+    "file-saver": "^2.0.2",
     "moment": "^2.20.1",
     "react": "^16.2.0",
     "react-d3-graph": "^2.0.0-rc2",
