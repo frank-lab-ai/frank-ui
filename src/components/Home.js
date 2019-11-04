@@ -7,7 +7,28 @@ import FrankChart from './FrankChart';
 import NumericInput from 'react-numeric-input';
 import '../home.css'
 import { isNullOrUndefined } from 'util';
+import { saveAs } from 'file-saver';
 
+
+const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
+  const byteCharacters = atob(b64Data);
+  const byteArrays = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+    const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+
+  const blob = new Blob(byteArrays, {type: contentType});
+  return blob;
+}
 
 
 class Home extends Component {
@@ -18,7 +39,7 @@ class Home extends Component {
       answer: {}, loading: false, final_answer_returned: false, partial_answer_returned: false, errorMessage: '', examplesOpen: false, sessionId: '',
       currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
       blanketLength: 1, explanation:{all:'', what:'', how:'', why:''}, traceOpen:false,
-      plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false
+      plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false, cy: null,
       // plotData: {
       //   "p": "population",
       //   "fp": "{\"function\" :[-5.2617682627407867E8,294139.066666669], \"data\":[[2017.0, 6.7118648E7],[2016.0, 6.6706879333333336E7],[2015.0, 6.6486984E7],[2014.0, 6.6316092E7],[2013.0, 6.5969263E7],[2012.0, 6.56546795E7],[2011.0, 6.53431815E7],[2010.0, 6.50253245E7],[2009.0, 6.47049825E7]]}",
@@ -196,8 +217,23 @@ class Home extends Component {
       })
   }
 
+  handleUpdateCyObj(cyObj){
+    this.setState({cy: cyObj})
+  }
+
   handleBlanketLengthChange(valAsNumber, valAsString, e){
     this.setState({blanketLength: valAsNumber})
+  }
+
+  handleDownloadInferenceGraph(){
+    var cy = this.state.cy
+    if (cy=== null)
+      return
+    var b64key = 'base64,';
+    var content = cy.png({output:'blob', full:true})
+    // var b64 = content.substring( content.indexOf(b64key) + b64key.length );
+    // var imgBlob = b64toBlob( b64, 'image/png' );
+    saveAs( content, 'frank_graph.png' );
   }
 
 
@@ -237,8 +273,12 @@ class Home extends Component {
             <Menu.Menu stackable inverted={this.state.questionView} secondary position='right'>
               <Menu.Item  onClick={()=>{this.checkForAnswer(); this.setState({answer_data_last_changed:new Date().getSeconds()})} } >
                 <Icon name='refresh' />
-                Refresh
               </Menu.Item>
+              {this.state.cy !== null &&
+              <Menu.Item  onClick={()=>this.handleDownloadInferenceGraph()} >
+                <Icon name='download' />
+              </Menu.Item>
+              }
               <Menu.Item onClick={()=>this.setState({questionView:true, inferenceGraphView:false})} >
                 <Icon name='edit outline' />
                 Return to question
@@ -532,8 +572,11 @@ class Home extends Component {
                 </Button.Group>
                 
                 <CytoscapeGraph 
-                  data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} height='100vh'
-                  handleNodeClick={this.handleNodeClick.bind(this)} lastChanged={this.state.answer_data_last_changed} />
+                  data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} 
+                  height='100vh'
+                  handleNodeClick={this.handleNodeClick.bind(this)} 
+                  handleUpdateCyObj={this.handleUpdateCyObj.bind(this)} 
+                  lastChanged={this.state.answer_data_last_changed} />
               </div>
             }
             </div>

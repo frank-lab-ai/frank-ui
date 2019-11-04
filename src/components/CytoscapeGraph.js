@@ -259,6 +259,7 @@ class CytoscapeGraph extends Component {
         });
 
         this.state = { cy };
+        this.props.handleUpdateCyObj(cy)
     }
 
     hideChildren = (target)=>{
