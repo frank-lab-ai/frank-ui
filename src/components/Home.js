@@ -241,7 +241,7 @@ class Home extends Component {
     var whiteBgStyle = { borderRadius: '0px', background: 'white', padding: '5px', marginBottom: 0 }
     var alistBgStyle = {
       borderRadius: '0px', padding: '5px', background: '#E7E9EC',
-      border: 'none', color: '#fff', fontFamily: 'Ubuntu Mono'
+      border: 'none', color: '#fff'
     }
     const { activeIndex } = this.state
 
@@ -371,9 +371,9 @@ class Home extends Component {
 
 
           <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px', marginTop: '35px' }}>
-            {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned &&
+            {/* {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned &&
               <Image src='loading.svg' centered size='tiny' />
-            }
+            } */}
             <div style={{ clear: 'both' }} />
             {this.state.isError &&
               <div style={{
@@ -385,14 +385,14 @@ class Home extends Component {
             }
             {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
               <Segment style={{
-                borderRadius: '0px', paddingLeft: '20px', paddingBottom: 30,
+                borderRadius: '0px', paddingLeft: '20px', paddingBottom: 0,
                 background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
               }}>
                 {this.state.loading &&
                   <Image src='loading.svg' centered size='tiny' style={{ objectFit: 'cover', height: '30px', float: 'right' }} />
                 }
                 <div>
-                  <div style={{ fontSize: 15, fontFamily: 'Ubuntu Mono', marginBottom: 10, marginTop: 10 }} >
+                  <div style={{ fontSize: 15, marginBottom: 10, marginTop: 10 }} >
                     {this.state.questionAnswered}
                   </div>
                   <Statistic style={{ float: 'left', marginRight: '30px', marginTop: '20px', marginBottom: 10, fontSize: '10px' }}>
@@ -411,54 +411,57 @@ class Home extends Component {
                 
                 </Statistic> */}
                 <br />
-                <Label as='a' small='true' color='orange' style={{ marginTop: '2px' }}>
-                  <Icon name='globe' />Sources
-                  <Label.Detail>{this.state.answer.sources}</Label.Detail>
+                <Label basic as='span' color='orange' style={{ marginTop: '2px', borderRadius:0, borderWidth:0, paddingLeft:0, marginRight:20, fontWeight:400 }}>
+                  <Icon name='globe' />Source:
+                  <Label.Detail style={{marginLeft: 3}}>{this.state.answer.sources}</Label.Detail>
                 </Label>
 
-                <Label as='a' small='true' color='grey' style={{ marginTop: '2px' }}>
-                  <Icon name='hourglass end' /> Elapsed Time
-                  <Label.Detail>{this.state.answer.elapsed_time}</Label.Detail>
+                <Label basic as='span'  color='grey' style={{ marginTop: '2px', borderRadius:0, borderWidth:0, paddingLeft:0, fontWeight:400   }}>
+                  <Icon name='hourglass end' />Time:
+                  <Label.Detail style={{marginLeft: 3}}>{this.state.answer.elapsed_time}</Label.Detail>
                 </Label>
-
-                {isNullOrUndefined(this.state.answer.alist.xp) === false &&
-                  <div style={{marginTop:20,}}>
-                    <span style={{fontWeight:600}}>Explanation:</span> {this.state.answer.alist.xp}
-                  </div>
-                  
-                }
-
+                <div>
+                  <div style={{marginBottom: 0, marginTop: 10, marginRight: 5, fontWeight: 600, fontSize: 12, float: "left", color: "#444" }}>Answer Alist</div>
+                  <ReactJson src={this.state.answer.alist} theme='shapeshifter:inverted'
+                    displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
+                    style={{marginBottom: 20, marginTop: 10,  background: '#FFF', fontSize: 11, float: "left" }} />
+                  <div style={{clear: "both"}} />
+                </div>
               </Segment>
               
             }
 
           {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
               <Segment style={{
-                borderRadius: '0px', paddingLeft: '20px', paddingBottom: 0,
-                background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', fontFamily: 'Ubuntu Mono', marginLeft: 'auto', marginRight: 'auto'
+                borderRadius: '0px', paddingLeft: '20px', paddingBottom: 20,
+                background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
               }}>
-                <b>Answer Alist</b><br />
+                
                 {/* {JSON.stringify(this.state.answer.alist)} */}
-                <ReactJson src={this.state.answer.alist} theme='shapeshifter:inverted'
-                  displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
-                  style={{ padding: 10, background: '#FFF', fontSize: 11 }} />
-
+                {isNullOrUndefined(this.state.answer.alist.xp) === false &&
+                  <div>
+                    <div style={{fontWeight:600}}><Icon name='idea' size='large' color= 'grey'/><span style={{color:'#333333'}}>Explanation</span></div> 
+                    <div style={{marginTop: 10, marginLeft: 30, color:'#333333'}}>{this.state.answer.alist.xp}</div>
+                  </div>
+                  
+                }
               </Segment>
             }
 
             {/* {(this.state.final_answer_returned || this.state.partial_answer_returned) && */}
             {(this.state.currentCount > 0) &&
               <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
-                <Button basic color='teal' 
+                <Button basic color='white' icon='sitemap' content='Inference Graph'
+                  style={{borderRadius:0, background:'transparent'}}
                   onClick={()=>this.setState({inferenceGraphView:true, questionView:false, alist_node: {}, 
                             explanation:{all:'', what:'', how:'', why:''}, loadingSelectedAlist: false})
                   }>
-                    Inference Graph
                 </Button>
                             
 
                 <Modal
-                  trigger={<Button basic color='teal' onClick={()=>this.setState({traceOpen:true})}>Trace</Button>}
+                  trigger={<Button basic color='white' icon='align left' content='Trace'
+                              style={{borderRadius:0, background:'transparent'}} onClick={()=>this.setState({traceOpen:true})}></Button>}
                   centered={false}
                   open={this.state.traceOpen}
                   onClose={() => this.setState({ traceOpen: false })}
@@ -484,6 +487,9 @@ class Home extends Component {
                 </Modal>
 
               </div>
+            }
+            {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned &&
+              <Image src='loading.svg' centered size='tiny' />
             }
 
             {!this.state.final_answer_returned && this.state.timedOut && !this.state.isError &&
