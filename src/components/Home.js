@@ -37,7 +37,10 @@ class Home extends Component {
     this.state = {
       query: '', templates: [], activeIndex: 10, alist: {}, alist_string: '',
       answer: {}, loading: false, final_answer_returned: false, partial_answer_returned: false, errorMessage: '', examplesOpen: false, sessionId: '',
-      currentCount: 0, intervalId: null, timedOut: false, maxCheckAttempts: 100, questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
+      currentCount: 0, intervalId: null, timedOut: false,
+      maxCheckAttempts: 600, // 600 attempts with 3 seconds intervals = 30 hour before UI timeout. 
+      answerCheckInterval: 3000, //3 seconds
+      questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
       blanketLength: 1, explanation:{all:'', what:'', how:'', why:''}, traceOpen:false,
       plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false, cy: null,
       // plotData: {
@@ -140,7 +143,7 @@ class Home extends Component {
         .catch(err => this.setState({ currentCount: 0, isError: true, errorMessage: "Sorry. FRANK's reasoner is currently offline.", loading: false }))
 
       //check for answer at timer intervals
-      var intervalId = setInterval(this.timer, 3000);
+      var intervalId = setInterval(this.timer, this.state.answerCheckInterval);
       this.setState({ intervalId: intervalId });
     })
 
