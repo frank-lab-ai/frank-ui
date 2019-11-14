@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab, Image, Popup, Grid, Menu, Sidebar } from 'semantic-ui-react';
+import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab, Image, Popup, Grid, Menu, Sidebar, Checkbox } from 'semantic-ui-react';
 import ReactJson from 'react-json-view';
 import InferenceGraph from './InferenceGraph';
 import CytoscapeGraph from './CytoscapeGraph';
@@ -8,6 +8,10 @@ import NumericInput from 'react-numeric-input';
 import '../home.css'
 import { isNullOrUndefined } from 'util';
 import { saveAs } from 'file-saver';
+import AceEditor from "react-ace";
+
+import "ace-builds/src-noconflict/mode-java";
+import "ace-builds/src-noconflict/theme-github";
 
 
 const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
@@ -43,6 +47,7 @@ class Home extends Component {
       questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
       blanketLength: 1, explanation:{all:'', what:'', how:'', why:''}, traceOpen:false,
       plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false, cy: null,
+      nlView: true, editorAlist:'{"h":"value"}', autorefresh_graph:true,
       // plotData: {
       //   "p": "population",
       //   "fp": "{\"function\" :[-5.2617682627407867E8,294139.066666669], \"data\":[[2017.0, 6.7118648E7],[2016.0, 6.6706879333333336E7],[2015.0, 6.6486984E7],[2014.0, 6.6316092E7],[2013.0, 6.5969263E7],[2012.0, 6.56546795E7],[2011.0, 6.53431815E7],[2010.0, 6.50253245E7],[2009.0, 6.47049825E7]]}",
@@ -87,13 +92,11 @@ class Home extends Component {
     var alist_json = {}
     try {
       alist_json = JSON.parse(e.target.value)
-
     }
     catch (e) {
       console.log("Invalid json format")
     }
     this.setState({ alist_string: e.target.value, alist: alist_json })
-
   }
 
 
@@ -120,7 +123,10 @@ class Home extends Component {
 
 
 
-  handleRIFQuery() {
+  handleRIFQuery(isAlistEditor) {
+    if (isAlistEditor){
+      this.setState({query: this.state.editorAlist})
+    }
     if (this.state.query.trim().length === 0) return;
     if (!Object.keys(this.state.alist).length) {
       this.setState({ isError: true, errorMessage: "FRANK was unable to parse your questions. Can you rephrase?" })
@@ -129,7 +135,9 @@ class Home extends Component {
     const sessionId = this.generateQuickGuid()
     this.setState({
       loading: true, final_answer_returned: false, partial_answer_returned: false, answer: {}, sessionId,
-      currentCount: this.state.maxCheckAttempts, timedOut: false, isError: false, questionAnswered: this.state.query, alist_node: {},
+      currentCount: this.state.maxCheckAttempts, timedOut: false, isError: false, 
+      questionAnswered: isAlistEditor? this.state.editorAlist : this.state.query, 
+      alist_node: {},
       loadingSelectedAlist: false
     }, () => {
       const { alist } = this.state
@@ -176,7 +184,8 @@ class Home extends Component {
 
   updateAlistAndTemplates(data) {
     // console.log(data)
-    this.setState({ template: data['template'], alist: data['alist'], alist_string: data['alist_string'], question: data['question'], isError: false })
+    this.setState({ template: data['template'], alist: data['alist'], alist_string: data['alist_string'], 
+      question: data['question'], editorAlist: JSON.stringify(data['alist'], null, 2), isError: false })
   }
 
   displayAnswer(data) {
@@ -200,6 +209,11 @@ class Home extends Component {
     var isError = this.state.isError
     if (isFinal || !isNullOrUndefined(data.partial_answer))
       isError = false;
+    
+    var answer_last_changed = this.state.answer_data_last_changed
+    if (this.state.autorefresh_graph === true){
+      answer_last_changed = new Date().getTime();
+    }
 
     this.setState({
       answer: answer,
@@ -207,7 +221,7 @@ class Home extends Component {
       loading: !isFinal,
       isError: false,
       partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.alist),
-      // answer_data_last_changed:new Date().getTime() // remove to stop automatic refresh of inference graphs 
+      answer_data_last_changed:answer_last_changed
     })
   }
 
@@ -239,6 +253,14 @@ class Home extends Component {
     saveAs( content, 'frank_graph.png' );
   }
 
+  onEditorChange(newValue) {
+    var alist = this.state.alist
+    try{
+      alist = JSON.parse(newValue)
+    }catch(err){}
+    this.setState({editorAlist:newValue, alist:alist})
+  }
+
 
   render() {
     var whiteBgStyle = { borderRadius: '0px', background: 'white', padding: '5px', marginBottom: 0 }
@@ -260,7 +282,11 @@ class Home extends Component {
           </Menu.Item>
           <Menu.Item>
               <Header.Subheader  style={{color:this.state.questionView?'#c1d2e1':'#2D3142', paddingBottom:10}}>
-                {this.state.questionView? "Functional Reasoning Acquires New Knowledge" : <span><span style={{fontWeight:700, marginRight: 30, color:'#009999'}}>Inference Explorer</span> {this.state.query} </span>}
+                {this.state.questionView? "Functional Reasoning Acquires New Knowledge" : <span><span style={{fontWeight:700, marginRight: 30, color:'#009999', float:'left'}}>Inference Explorer</span> 
+                <div style={{whiteSpace: "nowrap", maxWidth: "400px", overflow: "hidden", textOverflow: "ellipsis", float:"left"}}>
+                  {this.state.query}
+                </div>               
+                </span>}
                 </Header.Subheader>
               {/* {this.state.questionView &&
               <Label size='tiny' style={{
@@ -274,6 +300,7 @@ class Home extends Component {
           
           {this.state.inferenceGraphView &&
             <Menu.Menu stackable inverted={this.state.questionView} secondary position='right'>
+              <Menu.Item as={Checkbox} toggle label='auto refresh' checked={this.state.autorefresh_graph} onChange={(e,d)=>{this.setState({autorefresh_graph: d.checked})} } />
               <Menu.Item  onClick={()=>{this.checkForAnswer(); this.setState({answer_data_last_changed:new Date().getSeconds()})} } >
                 <Icon name='refresh' />
               </Menu.Item>
@@ -295,58 +322,105 @@ class Home extends Component {
         {/* Question view */}
         {this.state.questionView &&
           <div>
+           
+            
           <Segment inverted secondary style={{ borderRadius: '0px', margin: '0px', background: '#2D3142' }}>
+          
             <div style={{ maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto' }}>
-              <br />
-              <Label as='a' content='Try these examples' icon='info'
+                <Label as='a' content='Try these examples' icon='info'
                 onClick={() => this.setState({ examplesOpen: true })} style={{
                   marginBottom: 5, float: 'right',
                   background: '#252937', color: '#7B8893'
                 }} />
               <div style={{ clear: 'both' }} />
-              <Form style={{ marginBottom: 0 }}>
-                <Form.Input className='no_input_focus'
-                  value={this.state.query}
-                  style={whiteBgStyle} size='large' transparent
-                  placeholder='Type your question...'
-                  action={
-                    <Button onClick={this.handleRIFQuery.bind(this)} color='orange' icon
-                      style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
-                      <Icon name='search' />
-                    </Button>
+                {this.state.nlView &&
+        
+                        
+                        <Form style={{ marginBottom: 0 }}>
+                          <Form.Input className='no_input_focus'
+                            value={this.state.query}
+                            style={whiteBgStyle} size='large' transparent
+                            placeholder='Type your question...'
+                            action={
+                              <Button.Group>
+                                <Button onClick={()=>{this.setState({nlView:false})}} color='orange' icon
+                                  style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
+                                  <Icon name='code' />
+                                </Button>
+                                <Button onClick={this.handleRIFQuery.bind(this, false)} color='orange' icon
+                                  style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
+                                  <Icon name='search' />
+                                </Button>
+                              </Button.Group>
+
+                            }
+                            list='templates'
+                            onChange={this.handleChangeQuery.bind(this)}
+                          />
+                          {this.state.query.trim() !== "" &&
+                            <div>
+                              <div style={{ background: '#404353', padding: 10, paddingTop: 20, marginTop: '-14px' }}>
+
+                              
+                                <p style={{ fontSize: 13, fontWeight: '700', color: '#A9BAC9' }}>
+                                  Generated Alist
+                                <Popup inverted trigger={
+                                    <Icon size='large' color='orange' name='question circle' style={{ marginTop: '-5px', marginLeft: '5px' }} />
+                                  }
+                                    content={<p> An alist is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.
+                                  Attribute names:<ul>
+                                        <li>h = operation</li>
+                                        <li>v = operation variable</li>
+                                        <li>s = subject</li>
+                                        <li>p = property (or predicate)</li>
+                                        <li>o = object</li>
+                                        <li>t = time</li>
+                                        <li>u = uncertainty</li>
+                                        <li>xp = explanation</li>
+                                      </ul></p>}
+                                  />:
+                              </p>
+                                {/* <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p> */}
+                                <ReactJson src={this.state.alist} theme='monokai'
+                                  displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
+                                  style={{ padding: 10, background: '#404353', fontSize: 11 }} />
+                              </div>
+                            </div>
+                          }
+                        </Form>
                   }
-                  list='templates'
-                  onChange={this.handleChangeQuery.bind(this)}
-                />
-                {this.state.query.trim() !== "" &&
-                  <div>
-                    <div style={{ background: '#404353', padding: 10, paddingTop: 20, marginTop: '-14px' }}>
-                      <p style={{ fontSize: 13, fontWeight: '700', color: '#A9BAC9' }}>
-                        Generated Alist
-                      <Popup inverted trigger={
-                          <Icon size='large' color='orange' name='question circle' style={{ marginTop: '-5px', marginLeft: '5px' }} />
-                        }
-                          content={<p> An alist is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.
-                        Attribute names:<ul>
-                              <li>h = operation</li>
-                              <li>v = operation variable</li>
-                              <li>s = subject</li>
-                              <li>p = property (or predicate)</li>
-                              <li>o = object</li>
-                              <li>t = time</li>
-                              <li>u = uncertainty</li>
-                              <li>xp = explanation</li>
-                            </ul></p>}
-                        />:
-                    </p>
-                      {/* <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p> */}
-                      <ReactJson src={this.state.alist} theme='monokai'
-                        displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
-                        style={{ padding: 10, background: '#404353', fontSize: 11 }} />
+                  {this.state.nlView === false &&
+                    <div style={{background:'#FFF', paddingBottom: 5, paddingRight: 5}}>
+                      <div style={{width:'100%', padding:8, background:'#E8E8E8', color:'#606469', fontSize:13}}>
+                        Enter formal alist query
+                      </div>
+                      <AceEditor
+                        mode="json"
+                        theme="github"
+                        onChange={this.onEditorChange.bind(this)}
+                        name="alist_editor"
+                        value={this.state.editorAlist}
+                        editorProps={{ $blockScrolling: true }}
+                        minLines={5} maxLines={50}
+                        fontSize={16}
+                        width='100%'
+                        showPrintMargin={false}
+                        wrapEnabled={true}
+                      />
+                      <Button.Group style={{float:'right'}}>
+                        <Button onClick={()=>{this.setState({nlView:true})}} color='orange' icon
+                          style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
+                          <Icon name='font' />
+                        </Button>
+                        <Button onClick={this.handleRIFQuery.bind(this, true)} color='orange' icon
+                          style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
+                          <Icon name='search' />
+                        </Button>
+                      </Button.Group>
+                      <div style={{clear:'both'}} />
                     </div>
-                  </div>
-                }
-              </Form>
+                  }        
+              
               <br />
             </div>
           </Segment>

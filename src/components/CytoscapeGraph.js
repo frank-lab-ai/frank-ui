@@ -62,7 +62,7 @@ let conf = {
         {
             selector: 'node[ntype = "hnode"]',
             style: {
-                'content': 'data(label)',
+                'content': 'data(h)',
                 "shape" : 'round-rectangle',
                 'text-opacity': 1,
                 'text-valign': 'center',
@@ -72,7 +72,7 @@ let conf = {
                 'background-color': '#F5F5F5',
                 "selection-box-opacity": 0.1,
                 "height":25,
-                "width": 45,
+                "width": 50,
                 "border-style":"solid",
                 "border-color":"#00938A",
                 "border-width":2,  
