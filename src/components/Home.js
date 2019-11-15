@@ -239,7 +239,11 @@ class Home extends Component {
   }
 
   handleBlanketLengthChange(valAsNumber, valAsString, e){
-    this.setState({blanketLength: valAsNumber})
+    this.setState({blanketLength: valAsNumber}, ()=>{
+      if (this.state.alist_node !== undefined && Object.keys(this.state.alist_node).length > 0){
+        this.handleNodeClick(this.state.alist_node.id)
+      }
+    })
   }
 
   handleDownloadInferenceGraph(){
@@ -617,7 +621,7 @@ class Home extends Component {
                       {!this.state.loadingSelectedAlist && this.state.alist_node &&
                         <div> 
                           {this.state.explanation.all.length > 0 &&
-                            <div style={{ float: 'left' }}><span style={{fontWeight: 600}}>Explanation: </span>{this.state.explanation.all}</div>
+                            <div><span style={{fontWeight: 600}}>Explanation: </span>{this.state.explanation.all}</div>
                           }
                           <div style={{clear:'both', marginTop:15}} />
                           {!this.state.loadingSelectedAlist && this.state.alist_node.h === "regress" && 
