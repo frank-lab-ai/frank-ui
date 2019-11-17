@@ -45,7 +45,7 @@ class Home extends Component {
       maxCheckAttempts: 600, // 600 attempts with 3 seconds intervals = 30 hour before UI timeout. 
       answerCheckInterval: 3000, //3 seconds
       questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
-      blanketLength: 1, explanation:{all:'', what:'', how:'', why:''}, traceOpen:false,
+      blanketLength: 1, explanation:{what:'', how:'', why:'', sources:''}, traceOpen:false,
       plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false, cy: null,
       nlView: true, editorAlist:'{"h":"value"}', autorefresh_graph:true,
       // plotData: {
@@ -522,7 +522,20 @@ class Home extends Component {
                 {isNullOrUndefined(this.state.answer.alist.xp) === false &&
                   <div>
                     <div style={{fontWeight:600}}><Icon name='idea' size='large' color= 'grey'/><span style={{color:'#333333'}}>Explanation</span></div> 
-                    <div style={{marginTop: 10, marginLeft: 30, color:'#333333'}}>{this.state.answer.alist.xp}</div>
+                    <div style={{marginTop: 10, marginLeft: 30, color:'#333333'}}>
+                      {this.state.answer.alist.what!== undefined && this.state.answer.alist.what.length > 0 &&
+                        <span>{this.state.answer.alist.what}</span>
+                      }
+                      {this.state.answer.alist.why!== undefined && this.state.answer.alist.why.length > 0 &&
+                        <span>{' ' + this.state.answer.alist.why}</span>
+                      } 
+                      {this.state.answer.alist.how!== undefined && this.state.answer.alist.how.length > 0 &&
+                        <span>{' ' + this.state.answer.alist.how}</span>
+                      } 
+                      {this.state.answer.alist.sources!== undefined && this.state.answer.alist.sources.length > 0 &&
+                        <span>{' ' + this.state.answer.alist.sources}</span>
+                      } 
+                    </div>
                   </div>
                   
                 }
@@ -620,9 +633,22 @@ class Home extends Component {
   
                       {!this.state.loadingSelectedAlist && this.state.alist_node &&
                         <div> 
-                          {this.state.explanation.all.length > 0 &&
-                            <div><span style={{fontWeight: 600}}>Explanation: </span>{this.state.explanation.all}</div>
-                          }
+                          <div><span style={{fontWeight: 600}}>Explanation: </span>
+                            {this.state.explanation.what.length > 0 &&
+                              <span>{this.state.explanation.what}</span>
+                            }
+                            {this.state.explanation.why.length > 0 &&
+                              <span>{' WHY: ' + this.state.explanation.why}</span>
+                            } 
+                            {this.state.explanation.how.length > 0 &&
+                              <span>{' HOW: ' + this.state.explanation.how}</span>
+                            } 
+                            {this.state.explanation.sources !== undefined && this.state.explanation.sources.length > 0 &&
+                              <span>{' ' + this.state.explanation.sources}</span>
+                            } 
+                            
+                          </div>
+                          
                           <div style={{clear:'both', marginTop:15}} />
                           {!this.state.loadingSelectedAlist && this.state.alist_node.h === "regress" && 
                             <FrankChart alist={this.state.alist_node} />
