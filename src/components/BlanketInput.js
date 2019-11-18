@@ -38,9 +38,9 @@ class BlanketInput extends Component {
       <Segment compact style={{padding:5, paddingLeft:10, borderRadius:30, boxShadow:'none', borderStyle:'none', background:(this.props.background)}}> 
         <span style={{fontColor:'#333333', fontSize:13}}>{this.props.label}</span> 
         <Input size='mini' type='text' transparent style={{marginLeft:5}} defaultValue={this.props.defaultValue} value={this.props.value} onChange={this.onValueChanged.bind(this)}>
-          <Button circular icon='minus' style={{'marginRight':10}} onClick={this.onDecrease.bind(this)} />
+          <Button circular icon='minus' size='mini' style={{'marginRight':10}} onClick={this.onDecrease.bind(this)} />
           <input style={{borderRadius:10, width:20}} />
-          <Button circular icon='plus' onClick={this.onIncrease.bind(this)} />
+          <Button circular icon='plus' size='mini' onClick={this.onIncrease.bind(this)} />
         </Input>
       </Segment>
     );
