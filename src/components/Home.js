@@ -9,6 +9,7 @@ import '../home.css'
 import { isNullOrUndefined } from 'util';
 import { saveAs } from 'file-saver';
 import AceEditor from "react-ace";
+import BlanketInput from './BlanketInput';
 
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
@@ -45,7 +46,7 @@ class Home extends Component {
       maxCheckAttempts: 600, // 600 attempts with 3 seconds intervals = 30 hour before UI timeout. 
       answerCheckInterval: 3000, //3 seconds
       questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
-      blanketLength: 1, explanation:{what:'', how:'', why:'', sources:''}, traceOpen:false,
+      ancestorBlanketLength: 1, descendantBlanketLength:1, explanation:{what:'', how:'', why:'', sources:''}, traceOpen:false,
       plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false, cy: null,
       nlView: true, editorAlist:'{"h":"value"}', autorefresh_graph:true,
       // plotData: {
@@ -227,7 +228,7 @@ class Home extends Component {
 
   handleNodeClick(nodeId) {
     this.setState({ loadingSelectedAlist: true })
-    fetch(`${this.frank_api_endpoint}/alist/${this.state.sessionId}/${nodeId}/blanketlength/${this.state.blanketLength}`, {})
+    fetch(`${this.frank_api_endpoint}/alist/${this.state.sessionId}/${nodeId}/blanketlengths/${this.state.ancestorBlanketLength}/${this.state.descendantBlanketLength}`, {})
       .then(result => result.json())
       .then(response => {
         this.setState({ alist_node: response.alist, explanation: response.explanation, loadingSelectedAlist: false, sidebarVisible:true })
@@ -238,8 +239,16 @@ class Home extends Component {
     this.setState({cy: cyObj})
   }
 
-  handleBlanketLengthChange(valAsNumber, valAsString, e){
-    this.setState({blanketLength: valAsNumber}, ()=>{
+  handleAnscestorBlanketLengthChange(value){
+    this.setState({ancestorBlanketLength: value}, ()=>{
+      if (this.state.alist_node !== undefined && Object.keys(this.state.alist_node).length > 0){
+        this.handleNodeClick(this.state.alist_node.id)
+      }
+    })
+  }
+
+  handleDescendantBlanketLengthChange(value){
+    this.setState({descendantBlanketLength: value}, ()=>{
       if (this.state.alist_node !== undefined && Object.keys(this.state.alist_node).length > 0){
         this.handleNodeClick(this.state.alist_node.id)
       }
@@ -265,6 +274,7 @@ class Home extends Component {
     this.setState({editorAlist:newValue, alist:alist})
   }
 
+  
 
   render() {
     var whiteBgStyle = { borderRadius: '0px', background: 'white', padding: '5px', marginBottom: 0 }
@@ -286,7 +296,9 @@ class Home extends Component {
           </Menu.Item>
           <Menu.Item>
               <Header.Subheader  style={{color:this.state.questionView?'#c1d2e1':'#2D3142', paddingBottom:10}}>
-                {this.state.questionView? "Functional Reasoning Acquires New Knowledge" : <span><span style={{fontWeight:700, marginRight: 30, color:'#009999', float:'left'}}>Inference Explorer</span> 
+                {this.state.questionView ? 
+                  <span style={{fontSize:17, fontWeight:400}}>Functional Reasoning Acquires New Knowledge</span> : 
+                  <span><span style={{fontSize:17, fontWeight:400, marginRight: 30, color:'#009999', float:'left'}}>Inference Explorer</span> 
                 <div style={{whiteSpace: "nowrap", maxWidth: "400px", overflow: "hidden", textOverflow: "ellipsis", float:"left"}}>
                   {this.state.query}
                 </div>               
@@ -548,7 +560,7 @@ class Home extends Component {
                 <Button basic color='white' icon='sitemap' content='Inference Graph'
                   style={{borderRadius:0, background:'transparent'}}
                   onClick={()=>this.setState({inferenceGraphView:true, questionView:false, alist_node: {}, 
-                            explanation:{all:'', what:'', how:'', why:''}, loadingSelectedAlist: false})
+                            explanation:{all:'', what:'', how:'', why:'',sources:''}, loadingSelectedAlist: false})
                   }>
                 </Button>
                             
@@ -622,18 +634,30 @@ class Home extends Component {
                   <Button color='white' onClick={()=>this.setState({sidebarVisible: false})} icon='angle left' content='Hide'
                     style={{borderRadius:0, marginTop:'-10px', background: 'transparent', paddingLeft: 0}} /> 
 
-                  <div style={{paddingTop: 10, marginBottom:10}}>
-                    <span  style={{float:'left', marginLeft: 0, paddingTop:0}}>Explanation Blanket Length:</span>
-                    <NumericInput min={1} max={30} value={this.state.blanketLength} onChange={this.handleBlanketLengthChange.bind(this)} 
-                      style={{input: {width:80}, float:'left', marginLeft: 7}}/>
+                  <div style={{paddingTop: 10, marginBottom:15}}>
+                    <div  style={{marginLeft: 0, paddingTop:0, paddingBottom:10}}>Explanation Blanket Lengths:</div>
+                    <div>
+                      <div style={{float:'left', marginRight:10}}>
+                        <BlanketInput onChange={this.handleAnscestorBlanketLengthChange.bind(this)} label='Ancestors'
+                           value={this.state.ancestorBlanketLength} defaultValue={1} background='#eaf6f6'/></div>
+                      <div style={{float:'left'}}><BlanketInput onChange={this.handleDescendantBlanketLengthChange.bind(this)} label='Descendants' 
+                           value={this.state.descendantBlanketLength} defaultValue={1} background='#fdf3ec'/></div>
+                      <div style={{clear:'both'}} />
+                    </div>
                   </div>
                               
 
                   <div style={{ clear: 'both' }} />
+                      {this.state.loadingSelectedAlist &&
+                            <Image src='loading.svg' size='mini' style={{ objectFit: 'cover', height: '30px', marginLeft: 10 }} />
+                      }
   
                       {!this.state.loadingSelectedAlist && this.state.alist_node &&
                         <div> 
-                          <div><span style={{fontWeight: 600}}>Explanation: </span>
+                          <div>
+                            { (this.state.explanation.what.length > 0 || this.state.explanation.how.length > 0 || this.state.explanation.why.length > 0 || this.state.explanation.sources.length > 0 ) &&
+                              <span style={{fontWeight: 600}}>Explanation: </span>
+                            }
                             {this.state.explanation.what.length > 0 &&
                               <span>{this.state.explanation.what}</span>
                             }
