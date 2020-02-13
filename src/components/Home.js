@@ -297,7 +297,7 @@ class Home extends Component {
           <Menu.Item>
               <Header.Subheader  style={{color:this.state.questionView?'#c1d2e1':'#2D3142', paddingBottom:10}}>
                 {this.state.questionView ? 
-                  <span style={{fontSize:17, fontWeight:400}}>Functional Reasoning Acquires New Knowledge</span> : 
+                  <span style={{fontSize:17, fontWeight:400}}>Functional Reasoner for Acquiring New Knowledge</span> : 
                   <span><span style={{fontSize:17, fontWeight:400, marginRight: 30, color:'#009999', float:'left'}}>Inference Explorer</span> 
                 <div style={{whiteSpace: "nowrap", maxWidth: "400px", overflow: "hidden", textOverflow: "ellipsis", float:"left"}}>
                   {this.state.query}
@@ -352,17 +352,21 @@ class Home extends Component {
                 {this.state.nlView &&
         
                         
-                        <Form style={{ marginBottom: 0 }}>
+                        <Form style={{ marginBottom: 0 }} onSubmit={this.handleRIFQuery.bind(this, false)}>
                           <Form.Input className='no_input_focus'
                             value={this.state.query}
                             style={whiteBgStyle} size='large' transparent
                             placeholder='Type your question...'
                             action={
                               <Button.Group>
-                                <Button onClick={()=>{this.setState({nlView:false})}} color='orange' icon
-                                  style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
-                                  <Icon name='code' />
-                                </Button>
+                                <Popup basic inverted position='bottom center' style={{padding:3, fontSize:12}}
+                                  content='Switch to alist (formal) input'
+                                  trigger={<Button basic onClick={()=>{this.setState({nlView:false})}} icon type='button'
+                                    style={{ borderRadius: '0px', marginLeft: '8px' }} size='large' >
+                                    <Icon name='code' color='grey' />
+                                  </Button>
+                                  } 
+                                />
                                 <Button onClick={this.handleRIFQuery.bind(this, false)} color='orange' icon
                                   style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
                                   <Icon name='search' />
@@ -424,10 +428,15 @@ class Home extends Component {
                         wrapEnabled={true}
                       />
                       <Button.Group style={{float:'right'}}>
-                        <Button onClick={()=>{this.setState({nlView:true})}} color='orange' icon
-                          style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
-                          <Icon name='font' />
-                        </Button>
+                        <Popup basic inverted position='bottom center' style={{padding:3, fontSize:12}}
+                          content='Switch to natural language text input'
+                          trigger= {                          
+                              <Button basic onClick={()=>{this.setState({nlView:true})}} icon
+                                style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
+                                <Icon name='font' color='grey' size='small'/> 
+                              </Button>
+                          }
+                        />
                         <Button onClick={this.handleRIFQuery.bind(this, true)} color='orange' icon
                           style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
                           <Icon name='search' />
