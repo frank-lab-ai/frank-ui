@@ -41,7 +41,7 @@ class Home extends Component {
     super();
     this.state = {
       query: '', templates: [], activeIndex: 10, alist: {}, alist_string: '',
-      answer: {}, loading: false, final_answer_returned: false, partial_answer_returned: false, errorMessage: '', examplesOpen: false, sessionId: '',
+      answer: {}, loading: false, final_answer_returned: false, intermediate_answer_returned: false, errorMessage: '', examplesOpen: false, sessionId: '',
       currentCount: 0, intervalId: null, timedOut: false,
       maxCheckAttempts: 600, // 600 attempts with 3 seconds intervals = 30 hour before UI timeout. 
       answerCheckInterval: 3000, //3 seconds
@@ -168,12 +168,12 @@ class Home extends Component {
 
   timer = () => {
     var newCount = this.state.currentCount - 1;
-    if (newCount >= 0) {
+    if (this.state.final_answer_returned === false && newCount >= 0) {
       this.checkForAnswer()
       this.setState({ currentCount: newCount });
     } else {
       clearInterval(this.state.intervalId);
-      this.setState({ timedOut: true, loading: false })
+      this.setState({ timedOut: true, loading: false, currentCount: 0 })
     }
   }
 
@@ -316,9 +316,10 @@ class Home extends Component {
           
           {this.state.inferenceGraphView &&
             <Menu.Menu stackable inverted={this.state.questionView} secondary position='right'>
-              <Menu.Item as={Checkbox} toggle label='auto refresh' checked={this.state.autorefresh_graph} onChange={(e,d)=>{this.setState({autorefresh_graph: d.checked})} } />
+              {/* <Menu.Item as={Checkbox} toggle label='auto refresh' checked={this.state.autorefresh_graph} onChange={(e,d)=>{this.setState({autorefresh_graph: d.checked})} } /> */}
               <Menu.Item  onClick={()=>{this.checkForAnswer(); this.setState({answer_data_last_changed:new Date().getSeconds()})} } >
                 <Icon name='refresh' />
+                Refresh
               </Menu.Item>
               {this.state.cy !== null &&
               <Menu.Item  onClick={()=>this.handleDownloadInferenceGraph()} >
@@ -352,7 +353,7 @@ class Home extends Component {
                 {this.state.nlView &&
         
                         
-                        <Form style={{ marginBottom: 0 }} onSubmit={this.handleRIFQuery.bind(this, false)}>
+                        <Form style={{ marginBottom: 0 }} /*onSubmit={this.handleRIFQuery.bind(this, false)}*/>
                           <Form.Input className='no_input_focus'
                             value={this.state.query}
                             style={whiteBgStyle} size='large' transparent
@@ -473,7 +474,7 @@ class Home extends Component {
 
 
           <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px', marginTop: '35px' }}>
-            {/* {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned &&
+            {/* {this.state.loading && !this.state.final_answer_returned && !this.state.intermediate_answer_returned &&
               <Image src='loading.svg' centered size='tiny' />
             } */}
             <div style={{ clear: 'both' }} />
@@ -485,7 +486,7 @@ class Home extends Component {
                 <span style={{ fontSize: 13 }}> <Icon name='exclamation triangle' color='yellow' size='large' /> {this.state.errorMessage} </span>
               </div>
             }
-            {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+            {(this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
               <Segment style={{
                 borderRadius: '0px', paddingLeft: '20px', paddingBottom: 0,
                 background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
@@ -533,7 +534,7 @@ class Home extends Component {
               
             }
 
-          {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
+          {(this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
               <Segment style={{
                 borderRadius: '0px', paddingLeft: '20px', paddingBottom: 20,
                 background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
@@ -563,13 +564,13 @@ class Home extends Component {
               </Segment>
             }
 
-            {/* {(this.state.final_answer_returned || this.state.partial_answer_returned) && */}
+            {/* {(this.state.final_answer_returned || this.state.intermediate_answer_returned) && */}
             {(this.state.currentCount > 0) &&
               <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
                 <Button basic color='white' icon='sitemap' content='Inference Graph'
                   style={{borderRadius:0, background:'transparent'}}
-                  onClick={()=>this.setState({inferenceGraphView:true, questionView:false, alist_node: {}, 
-                            explanation:{all:'', what:'', how:'', why:'',sources:''}, loadingSelectedAlist: false})
+                  onClick={()=>{this.setState({inferenceGraphView:true, questionView:false, alist_node: {}, 
+                            explanation:{all:'', what:'', how:'', why:'',sources:''}, loadingSelectedAlist: false}, ()=>this.checkForAnswer())}
                   }>
                 </Button>
                             
@@ -603,7 +604,7 @@ class Home extends Component {
 
               </div>
             }
-            {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned &&
+            {this.state.loading && !this.state.final_answer_returned && !this.state.intermediate_answer_returned &&
               <Image src='loading.svg' centered size='tiny' />
             }
 
@@ -703,7 +704,7 @@ class Home extends Component {
             <Sidebar.Pusher>
             <div>
             {
-              // (this.state.final_answer_returned || this.state.partial_answer_returned) &&
+              // (this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
               isNullOrUndefined(this.state.answer.graph_nodes) === false &&
               isNullOrUndefined(this.state.answer.graph_edges) === false &&
               this.state.answer.graph_nodes.length > 0 &&
