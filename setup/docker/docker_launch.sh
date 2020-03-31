@@ -13,7 +13,7 @@ cd /data/frank/web_ui
 echo "## creating logs directory if they do not exist"
 mkdir -p /data/frank/web_ui/core/logs/nginx 
 
-echo "## recreating opine-ui container ..."
+echo "## recreating frank-ui container ..."
 docker run -d --name frank_ui \
   -v /data/frank/web_ui/:/app \
   -v /data/frank/web_ui/logs/nginx:/var/log/nginx  \

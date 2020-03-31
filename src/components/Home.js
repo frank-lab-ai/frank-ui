@@ -10,6 +10,7 @@ import { isNullOrUndefined } from 'util';
 import { saveAs } from 'file-saver';
 import AceEditor from "react-ace";
 import BlanketInput from './BlanketInput';
+import {config} from '../config'
 
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
@@ -66,9 +67,8 @@ class Home extends Component {
       "country with the largest population in 1998",
       "country in Europe with the lowest population in 2010"
     ]
-    this.server_host = "34.242.204.151"; //;"remote"
-    // this.server_host = "localhost"; //;"localhost"
-    this.frank_api_endpoint = "http://" + this.server_host + ":9876";
+    console.log(`server: ${config.frank_server_host}`)
+    this.frank_api_endpoint = `http://${config.frank_server_host}:${config.frank_server_port}`;
     this.timer = this.timer.bind(this);
   }
 
