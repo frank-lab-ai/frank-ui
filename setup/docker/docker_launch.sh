@@ -17,7 +17,6 @@ echo "## recreating frank-ui container ..."
 docker run -d --name frank-ui \
   -v /data/frank/web_ui/config.js:/app/src/config.js \
   -v /data/frank/web_ui/logs/nginx:/var/log/nginx  \
-  -v /data/frank/web_ui/conf.d:/etc/nginx/conf.d \
   --net franknet0 \
   --ip 172.20.0.2 \
   --restart always nkobby/frank-ui:1.0
