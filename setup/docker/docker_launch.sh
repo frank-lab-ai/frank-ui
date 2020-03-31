@@ -20,7 +20,7 @@ docker run -d --name frank-ui \
   -v /data/frank/web_ui/docker-files/conf.d:/etc/nginx/conf.d \
   --net franknet0 \
   --ip 172.20.0.2 \
-  --restart always kan/nginx-npm:1.1
+  --restart always nkobby/frank-ui:1.0
 
 #echo "## npm install and build"
 #docker exec frank-ui bash -c 'cd /app; npm install; npm run build'
