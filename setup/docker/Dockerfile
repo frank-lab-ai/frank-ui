@@ -7,8 +7,11 @@ RUN apt-get install -y nodejs
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/$
 RUN apt-get update && apt-get install -y yarn
 COPY setup/docker/entrypoint.sh /
-COPY src/ public/ /app/ 
-COPY package.json README.md /app/
+RUN mkdir -p /app/src
+RUN mkdir -p /app/public
+COPY src/ /app/src 
+COPY public/ /app/public
+COPY package.json package-lock.json README.md /app/
 RUN chmod 754 /entrypoint.sh
 ENTRYPOINT ["sh", "./entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
