@@ -11,7 +11,7 @@ cd /data/frank/web_ui
 #git pull
 
 echo "## creating logs directory if they do not exist"
-mkdir -p /data/frank/web_ui/core/logs/nginx 
+mkdir -p /data/frank/web_ui/logs/nginx 
 
 echo "## recreating frank-ui container ..."
 docker run -d --name frank-ui \
