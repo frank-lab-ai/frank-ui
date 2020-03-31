@@ -7,6 +7,8 @@ RUN apt-get install -y nodejs
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/$
 RUN apt-get update && apt-get install -y yarn
 COPY entrypoint.sh /
+COPY src/ /app/
+COPY package.json README.md /app/
 RUN chmod 754 /entrypoint.sh
 ENTRYPOINT ["sh", "./entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

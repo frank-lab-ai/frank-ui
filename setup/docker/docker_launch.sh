@@ -15,7 +15,7 @@ mkdir -p /data/frank/web_ui/core/logs/nginx
 
 echo "## recreating frank-ui container ..."
 docker run -d --name frank_ui \
-  -v /data/frank/web_ui/:/app \
+  -v /data/frank/web_ui/config.js:/app/src/config.js \
   -v /data/frank/web_ui/logs/nginx:/var/log/nginx  \
   -v /data/frank/web_ui/docker-files/conf.d:/etc/nginx/conf.d \
   --net franknet0 \
