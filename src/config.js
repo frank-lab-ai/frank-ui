@@ -1,6 +1,6 @@
 
 // config file for FRANK UI
 export const config = {
-  frank_server_host: "34.242.204.151", // or localhost
-  frank_server_port: 9876
+  frank_server_host: "localhost",
+  frank_server_port: 3000
 }
