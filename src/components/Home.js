@@ -50,6 +50,15 @@ class Home extends Component {
       ancestorBlanketLength: 1, descendantBlanketLength:1, explanation:{what:'', how:'', why:'', sources:''}, traceOpen:false,
       plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false, cy: null,
       nlView: true, editorAlist:'{"h":"value"}', autorefresh_graph:true,
+      defaultContext:[
+        {},
+        {
+          // place:'London', 
+          // device:'computer',
+          // datetime:'2020-09-05 00:00:00'
+        },
+        {}
+      ]
       // plotData: {
       //   "p": "population",
       //   "fp": "{\"function\" :[-5.2617682627407867E8,294139.066666669], \"data\":[[2017.0, 6.7118648E7],[2016.0, 6.6706879333333336E7],[2015.0, 6.6486984E7],[2014.0, 6.6316092E7],[2013.0, 6.5969263E7],[2012.0, 6.56546795E7],[2011.0, 6.53431815E7],[2010.0, 6.50253245E7],[2009.0, 6.47049825E7]]}",
@@ -70,6 +79,13 @@ class Home extends Component {
     console.log(`server: ${config.frank_server_host}`)
     this.frank_api_endpoint = `http://${config.frank_server_host}:${config.frank_server_port}`;
     this.timer = this.timer.bind(this);
+  }
+
+  componentDidMount() {
+    // navigator.geolocation.getCurrentPosition(function(position) {
+    //   console.log("Latitude is :", position.coords.latitude);
+    //   console.log("Longitude is :", position.coords.longitude);
+    // });
   }
 
   handleAccordionClick = (e, titleProps) => {
@@ -142,6 +158,9 @@ class Home extends Component {
       loadingSelectedAlist: false
     }, () => {
       const { alist } = this.state
+      if(!('cx' in alist)){
+        alist['cx'] = this.state.defaultContext;
+      }
       fetch(this.frank_api_endpoint + "/query", {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -190,7 +209,7 @@ class Home extends Component {
   }
 
   displayAnswer(data) {
-    if (data.answer !== undefined) {
+    if (data.answer !== undefined && data.answer !== null) {
       clearInterval(this.state.intervalId);  // stop timer for checks
       var today = new Date();
       var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
@@ -200,15 +219,17 @@ class Home extends Component {
 
   displayProgressTrace(data) {
     var answer = this.state.answer;
-    answer = data.partial_answer;
-    answer.trace = data.trace;
+    if (data.answer !== undefined && data.answer !== null){
+      answer = data.partial_answer;
+      answer.trace = data.trace;
+    }
     answer.graph_nodes = data.graph_nodes
     answer.graph_edges = data.graph_edges
-    var isFinal = data.answer !== undefined && data.answer.length > 0
+    var isFinal = data.answer !== undefined && data.answer !== null && data.answer.answer.length > 0
     if (isFinal)
       clearInterval(this.state.intervalId)
     var isError = this.state.isError
-    if (isFinal || !isNullOrUndefined(data.partial_answer))
+    if (isFinal || data.partial_answer === null || data.partial_answer === undefined)
       isError = false;
     
     var answer_last_changed = this.state.answer_data_last_changed
@@ -224,6 +245,7 @@ class Home extends Component {
       partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.alist),
       answer_data_last_changed:answer_last_changed
     })
+    
   }
 
   handleNodeClick(nodeId) {

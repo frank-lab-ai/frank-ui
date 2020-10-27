@@ -36,7 +36,7 @@ let conf = {
         {
             selector: 'node',
             style: {
-                'content': 'data(label)',
+                'content': 'data(id)',
                 'text-opacity': 1,
                 'text-valign': 'center',
                 'text-halign': 'center',
@@ -53,14 +53,14 @@ let conf = {
             }
         },
         {
-            selector: 'node[nstate = 2]',
+            selector: 'node[state = 5]',
             style: {
                 "background-color":defaultNodeColor,
                 "border-color": defaultNodeBorderColor
             },
         },
         {
-            selector: 'node[ntype = "hnode"]',
+            selector: 'node[node_type = "hnode"]',
             style: {
                 'content': 'data(h)',
                 "shape" : 'round-rectangle',
@@ -75,6 +75,26 @@ let conf = {
                 "width": 50,
                 "border-style":"solid",
                 "border-color":"#00938A",
+                "border-width":2,  
+
+            },
+        },
+        {
+            selector: 'node[node_type = "fact"]',
+            style: {
+                'content': 'data(h)',
+                "shape" : 'rectangle',
+                'text-opacity': 1,
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'color': '#FFFFFF',
+                'font-size': 11,
+                'background-color': '#000000',
+                "selection-box-opacity": 0.1,
+                "height":25,
+                "width": 40,
+                "border-style":"solid",
+                "border-color":"#000000",
                 "border-width":2,  
 
             },
