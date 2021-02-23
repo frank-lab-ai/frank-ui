@@ -53,6 +53,13 @@ let conf = {
             }
         },
         {
+            selector: 'node[state = 2]',
+            style: {
+                "background-color":defaultNodeColor,
+                "border-color": defaultNodeBorderColor
+            },
+        },
+        {
             selector: 'node[state = 5]',
             style: {
                 "background-color":defaultNodeColor,

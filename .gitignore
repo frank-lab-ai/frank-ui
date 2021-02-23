@@ -23,3 +23,5 @@ yarn-error.log*
 
 #docker nginx logs
 logs/nginx/*
+logs
+vscode-profile-*
