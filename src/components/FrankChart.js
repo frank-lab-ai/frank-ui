@@ -7,7 +7,7 @@ class FrankChart extends Component {
     this.state = { data:[], prediction:[], curveData:[], 
                    dataX:[], predictionX:[], curveDataX:[],
                    dataY:[], predictionY:[], curveDataY:[],
-                   yLabel:'', yUnit:'' }
+                   yLabel:'', yUnit:'', plotlyData:[], plotlyLayout:[], isSavedPlot:false }
   }
 
   componentDidMount(){
@@ -25,45 +25,57 @@ class FrankChart extends Component {
     try{
       var scale = 1000000000
       var fnPlot = JSON.parse(this.props.alist.fp)
-      isRescale = fnPlot.prediction[1] > scale;
-      var dataX = [];
-      var dataY = [];
-      data = fnPlot.data.map(d=> {
-        xArr.push(d[0])
-        var y = d[1]
-        if(isRescale) y = y/scale
-        dataX.push(d[0])
-        dataY.push(y)
-        return {x:d[0],y} 
-      }) 
-      xArr.push(fnPlot.prediction[0]) //add the prediction x value to the regression curve
-      prediction = [{x:fnPlot.prediction[0], y:fnPlot.prediction[1]}]      
-      var predictionX = [fnPlot.prediction[0]];
-      var predictionY = [fnPlot.prediction[1]];
-      if(isRescale) {
-        prediction = [{x:fnPlot.prediction[0], y:fnPlot.prediction[1]/scale}];
-        predictionX = [fnPlot.prediction[0]];
-        predictionY = [fnPlot.prediction[1]/scale];
-      }
+      if (fnPlot["function"] !== undefined){
+        isRescale = fnPlot.prediction[1] > scale;
+        var dataX = [];
+        var dataY = [];
+        data = fnPlot.data.map(d=> {
+          xArr.push(d[0])
+          var y = d[1]
+          if(isRescale) y = y/scale
+          dataX.push(d[0])
+          dataY.push(y)
+          return {x:d[0],y} 
+        }) 
+        xArr.push(fnPlot.prediction[0]) //add the prediction x value to the regression curve
+        prediction = [{x:fnPlot.prediction[0], y:fnPlot.prediction[1]}]      
+        var predictionX = [fnPlot.prediction[0]];
+        var predictionY = [fnPlot.prediction[1]];
+        if(isRescale) {
+          prediction = [{x:fnPlot.prediction[0], y:fnPlot.prediction[1]/scale}];
+          predictionX = [fnPlot.prediction[0]];
+          predictionY = [fnPlot.prediction[1]/scale];
+        }
 
-      var xWidenDiff = (Math.max(...xArr) - Math.min(...xArr))/3
-      xArr.push(...[Math.min(...xArr) - xWidenDiff, Math.max(...xArr)+xWidenDiff])    
-      var curveDataX = []  
-      var curveDataY = []  
-      curveData = xArr.map(x=> {
-        var i
-        var y = 0
-        for (i=0; i < fnPlot.function.length; i++){
-          y = y + (fnPlot.function[i] * Math.pow(x, i))
-        }         
-        if(isRescale) y = y/scale
-        curveDataX.push(x)
-        curveDataY.push(y)
-        return {x:x, y:y}
-      })      
-      curveData.push({x:prediction[0].x, y:prediction[1].y})
-      curveDataX.push(prediction[0].x)
-      curveDataY.push(prediction[0].y)
+        var xWidenDiff = (Math.max(...xArr) - Math.min(...xArr))/3
+        xArr.push(...[Math.min(...xArr) - xWidenDiff, Math.max(...xArr)+xWidenDiff])    
+        var curveDataX = []  
+        var curveDataY = []  
+        curveData = xArr.map(x=> {
+          var i
+          var y = 0
+          for (i=0; i < fnPlot.function.length; i++){
+            y = y + (fnPlot.function[i] * Math.pow(x, i))
+          }         
+          if(isRescale) y = y/scale
+          curveDataX.push(x)
+          curveDataY.push(y)
+          return {x:x, y:y}
+        })      
+        curveData.push({x:prediction[0].x, y:prediction[1].y})
+        curveDataX.push(prediction[0].x)
+        curveDataY.push(prediction[0].y)
+      }
+      else{
+        fnPlot["layout"]["width"] = 500;
+        fnPlot["layout"]["height"] = 400;
+        this.setState({
+          plotlyData: fnPlot["data"],
+          plotlyLayout: fnPlot["layout"],
+          isSavedPlot:true
+        })
+        return;
+      }
     }
     catch(err){}
     if(isRescale) {
@@ -71,7 +83,7 @@ class FrankChart extends Component {
       yUnit = 'e9'
     }
     this.setState({data, prediction, curveData, yLabel, yUnit, 
-      dataX, dataY, predictionX, predictionY, curveDataX, curveDataY})
+      dataX, dataY, predictionX, predictionY, curveDataX, curveDataY, isSavedPlot:false})
   }
 
   render() {
@@ -85,7 +97,7 @@ class FrankChart extends Component {
      }
     return (
       <div style={{marginLeft:'auto', marginRight:'auto', width:510}}>
-      {this.state.data.length > 0 && this.state.prediction.length > 0 &&
+      {!this.state.isSavedPlot && this.state.data.length > 0 && this.state.prediction.length > 0 &&
         <Plot style={{padding:5, margin:0}}
           data={[
             {type: 'scatter', x: this.state.curveDataX, y: this.state.curveDataY, mode: 'lines', marker: {color: 'orange'}, name:'fn'},
@@ -101,6 +113,13 @@ class FrankChart extends Component {
             xaxis: {autorange:true},
             yaxis: {autorange:true, title:this.state.ylabel}
           }}
+        />
+      }
+
+      {this.state.isSavedPlot &&
+        <Plot style={{padding:5, margin:0}}
+          data={this.state.plotlyData}
+          layout={this.state.plotlyLayout}
         />
       }
       </div>
