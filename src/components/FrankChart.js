@@ -11,10 +11,10 @@ class FrankChart extends Component {
   }
 
   componentDidMount(){
-    this.processAlistPlot()
+    this.processFnodePlot()
   }
 
-  processAlistPlot(){
+  processFnodePlot(){
     var data=[]
     var prediction=[]
     var curveData = []
@@ -24,7 +24,7 @@ class FrankChart extends Component {
     var yUnit = ''
     try{
       var scale = 1000000000
-      var fnPlot = JSON.parse(this.props.alist.fp)
+      var fnPlot = JSON.parse(this.props.fnode.fp)
       if (fnPlot["function"] !== undefined){
         isRescale = fnPlot.prediction[1] > scale;
         var dataX = [];

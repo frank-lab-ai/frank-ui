@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab, Image, Popup, Grid, Menu, Sidebar, Checkbox } from 'semantic-ui-react';
 import ReactJson from 'react-json-view';
-import InferenceGraph from './InferenceGraph';
+import InferenceFlowGraph from './InferenceFlowGraph';
 import CytoscapeGraph from './CytoscapeGraph';
 import FrankChart from './FrankChart';
 import NumericInput from 'react-numeric-input';
@@ -41,15 +41,15 @@ class Home extends Component {
   constructor() {
     super();
     this.state = {
-      query: '', templates: [], activeIndex: 10, alist: {}, alist_string: '',
+      query: '', templates: [], activeIndex: 10, fnode: {}, fnode_string: '',
       answer: {}, loading: false, final_answer_returned: false, intermediate_answer_returned: false, errorMessage: '', examplesOpen: false, sessionId: '',
       currentCount: 0, intervalId: null, timedOut: false,
       maxCheckAttempts: 600, // 600 attempts with 3 seconds intervals = 30 hour before UI timeout. 
       answerCheckInterval: 3000, //3 seconds
-      questionAnswered: '', alist_node: {}, loadingSelectedAlist: false,
+      questionAnswered: '', fnode_node: {}, loadingSelectedFnode: false,
       ancestorBlanketLength: 1, descendantBlanketLength:1, explanation:{what:'', how:'', why:'', sources:''}, traceOpen:false,
       plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false, cy: null,
-      nlView: true, editorAlist:'{"h":"value"}', autorefresh_graph:true,
+      nlView: true, editorFnode:'{"h":"value"}', autorefresh_graph:true,
       defaultContext:[
         {},
         {
@@ -101,19 +101,19 @@ class Home extends Component {
     var queryStr = e.target.value
     this.setState({ query: queryStr, isError: false })
     if (queryStr.trim().length === 0)
-      this.setState({ alist: {}, alist_string: "" })
-    this.getQueryAlist(queryStr)
+      this.setState({ fnode: {}, fnode_string: "" })
+    this.getQueryFnode(queryStr)
   }
 
-  handleAlistChange(e) {
-    var alist_json = {}
+  handleFnodeChange(e) {
+    var fnode_json = {}
     try {
-      alist_json = JSON.parse(e.target.value)
+      fnode_json = JSON.parse(e.target.value)
     }
     catch (e) {
       console.log("Invalid json format")
     }
-    this.setState({ alist_string: e.target.value, alist: alist_json })
+    this.setState({ fnode_string: e.target.value, fnode: fnode_json })
   }
 
 
@@ -121,10 +121,10 @@ class Home extends Component {
     const { children } = listItemProps
     // console.log(children)
     this.setState({ query: children, activeIndex: 10, examplesOpen: false }) //change active index to close accordion
-    this.getQueryAlist(children)
+    this.getQueryFnode(children)
   }
 
-  getQueryAlist(queryStr) {
+  getQueryFnode(queryStr) {
     if (queryStr.trim().length === 0) return;
     //var queryStr = this.state.query
     //if(queryStr[queryStr.length-1] === ' ' || queryStr[queryStr.length-1] === '?'){    
@@ -132,7 +132,7 @@ class Home extends Component {
     //generate the templates  
     fetch(this.frank_api_endpoint + '/template/' + queryStr, {})
       .then(result => result.json())
-      .then(response => this.updateAlistAndTemplates(response))
+      .then(response => this.updateFnodeAndTemplates(response))
       .catch(err => this.setState({ currentCount: 0, isError: true, errorMessage: "Sorry. The FRANK reasoner is currently offline.", loading: false }))
     //}
   }
@@ -140,12 +140,12 @@ class Home extends Component {
 
 
 
-  handleRIFQuery(isAlistEditor) {
-    if (isAlistEditor){
-      this.setState({query: this.state.editorAlist})
+  handleQuery(isFnodeEditor) {
+    if (isFnodeEditor){
+      this.setState({query: this.state.editorFnode})
     }
     if (this.state.query.trim().length === 0) return;
-    if (!Object.keys(this.state.alist).length) {
+    if (!Object.keys(this.state.fnode).length) {
       this.setState({ isError: true, errorMessage: "FRANK was unable to parse your questions. Can you rephrase?" })
       return;
     }
@@ -153,18 +153,18 @@ class Home extends Component {
     this.setState({
       loading: true, final_answer_returned: false, partial_answer_returned: false, answer: {}, sessionId,
       currentCount: this.state.maxCheckAttempts, timedOut: false, isError: false, 
-      questionAnswered: isAlistEditor? this.state.editorAlist : this.state.query, 
-      alist_node: {},
-      loadingSelectedAlist: false
+      questionAnswered: isFnodeEditor? this.state.editorFnode : this.state.query, 
+      fnode_node: {},
+      loadingSelectedFnode: false
     }, () => {
-      const { alist } = this.state
-      if(!('cx' in alist)){
-        alist['cx'] = this.state.defaultContext;
+      const { fnode } = this.state
+      if(!('cx' in fnode)){
+        fnode['cx'] = this.state.defaultContext;
       }
       fetch(this.frank_api_endpoint + "/query", {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ alist: alist, sessionId: sessionId })
+        body: JSON.stringify({ fnode: fnode, sessionId: sessionId, question: this.state.query })
       })
         .then(response => response.json())
         .then(result => this.displayAnswer(result))
@@ -202,10 +202,10 @@ class Home extends Component {
   }
 
 
-  updateAlistAndTemplates(data) {
+  updateFnodeAndTemplates(data) {
     // console.log(data)
-    this.setState({ template: data['template'], alist: data['alist'], alist_string: data['alist_string'], 
-      question: data['question'], editorAlist: JSON.stringify(data['alist'], null, 2), isError: false })
+    this.setState({ template: data['template'], fnode: data['fnode'], fnode_string: data['fnode_string'], 
+      question: data['question'], editorFnode: JSON.stringify(data['fnode'], null, 2), isError: false })
   }
 
   displayAnswer(data) {
@@ -223,8 +223,7 @@ class Home extends Component {
       answer = data.partial_answer;
       answer.trace = data.trace;
     }
-    answer.graph_nodes = data.graph_nodes
-    answer.graph_edges = data.graph_edges
+    answer.graph = data.graph
     var isFinal = data.answer !== undefined && data.answer !== null && data.answer.answer.length > 0
     if (isFinal)
       clearInterval(this.state.intervalId)
@@ -242,18 +241,18 @@ class Home extends Component {
       final_answer_returned: isFinal,
       loading: !isFinal,
       isError: false,
-      partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.alist),
+      partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.fnode),
       answer_data_last_changed:answer_last_changed
     })
     
   }
 
   handleNodeClick(nodeId) {
-    this.setState({ loadingSelectedAlist: true })
-    fetch(`${this.frank_api_endpoint}/alist/${this.state.sessionId}/${nodeId}/blanketlengths/${this.state.ancestorBlanketLength}/${this.state.descendantBlanketLength}`, {})
+    this.setState({ loadingSelectedFnode: true })
+    fetch(`${this.frank_api_endpoint}/fnode/${this.state.sessionId}/${nodeId}/blanketlengths/${this.state.ancestorBlanketLength}/${this.state.descendantBlanketLength}`, {})
       .then(result => result.json())
       .then(response => {
-        this.setState({ alist_node: response.alist, explanation: response.explanation, loadingSelectedAlist: false, sidebarVisible:true })
+        this.setState({ fnode_node: response.fnode, explanation: response.explanation, loadingSelectedFnode: false, sidebarVisible:true })
       })
   }
 
@@ -263,16 +262,16 @@ class Home extends Component {
 
   handleAnscestorBlanketLengthChange(value){
     this.setState({ancestorBlanketLength: value}, ()=>{
-      if (this.state.alist_node !== undefined && Object.keys(this.state.alist_node).length > 0){
-        this.handleNodeClick(this.state.alist_node.id)
+      if (this.state.fnode_node !== undefined && Object.keys(this.state.fnode_node).length > 0){
+        this.handleNodeClick(this.state.fnode_node.id)
       }
     })
   }
 
   handleDescendantBlanketLengthChange(value){
     this.setState({descendantBlanketLength: value}, ()=>{
-      if (this.state.alist_node !== undefined && Object.keys(this.state.alist_node).length > 0){
-        this.handleNodeClick(this.state.alist_node.id)
+      if (this.state.fnode_node !== undefined && Object.keys(this.state.fnode_node).length > 0){
+        this.handleNodeClick(this.state.fnode_node.id)
       }
     })
   }
@@ -289,11 +288,11 @@ class Home extends Component {
   }
 
   onEditorChange(newValue) {
-    var alist = this.state.alist
+    var fnode = this.state.fnode
     try{
-      alist = JSON.parse(newValue)
+      fnode = JSON.parse(newValue)
     }catch(err){}
-    this.setState({editorAlist:newValue, alist:alist})
+    this.setState({editorFnode:newValue, fnode:fnode})
   }
 
   
@@ -331,7 +330,7 @@ class Home extends Component {
                 background:this.state.questionView?'#252937':'#E8EAED',
                 color:this.state.questionView?'#7B8893':'#6E6E6E', marginBottom: 10 }}>v 0.2.0</Label>
               } */}
-              {this.state.inferenceGraphView && (this.state.loadingSelectedAlist || this.state.loading) &&
+              {this.state.inferenceGraphView && (this.state.loadingSelectedFnode || this.state.loading) &&
                   <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px', marginLeft: 10 }} />
               }  
           </Menu.Item>
@@ -383,14 +382,14 @@ class Home extends Component {
                             action={
                               <Button.Group>
                                 <Popup basic inverted position='bottom center' style={{padding:3, fontSize:12}}
-                                  content='Switch to alist (formal) input'
+                                  content='Switch to fnode (formal) input'
                                   trigger={<Button basic onClick={()=>{this.setState({nlView:false})}} icon type='button'
                                     style={{ borderRadius: '0px', marginLeft: '8px' }} size='large' >
                                     <Icon name='code' color='grey' />
                                   </Button>
                                   } 
                                 />
-                                <Button onClick={this.handleRIFQuery.bind(this, false)} color='orange' icon
+                                <Button onClick={this.handleQuery.bind(this, false)} color='orange' icon
                                   style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
                                   <Icon name='search' />
                                 </Button>
@@ -406,11 +405,11 @@ class Home extends Component {
 
                               
                                 <p style={{ fontSize: 13, fontWeight: '700', color: '#A9BAC9' }}>
-                                  Generated Alist
+                                  Generated Fnode
                                 <Popup inverted trigger={
                                     <Icon size='large' color='orange' name='question circle' style={{ marginTop: '-5px', marginLeft: '5px' }} />
                                   }
-                                    content={<p> An alist is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.
+                                    content={<p> An fnode is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.
                                   Attribute names:<ul>
                                         <li>h = operation</li>
                                         <li>v = operation variable</li>
@@ -423,8 +422,8 @@ class Home extends Component {
                                       </ul></p>}
                                   />:
                               </p>
-                                {/* <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.alist_string}</p> */}
-                                <ReactJson src={this.state.alist} theme='monokai'
+                                {/* <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.fnode_string}</p> */}
+                                <ReactJson src={this.state.fnode} theme='monokai'
                                   displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
                                   style={{ padding: 10, background: '#404353', fontSize: 11 }} />
                               </div>
@@ -435,14 +434,14 @@ class Home extends Component {
                   {this.state.nlView === false &&
                     <div style={{background:'#FFF', paddingBottom: 5, paddingRight: 5}}>
                       <div style={{width:'100%', padding:8, background:'#E8E8E8', color:'#606469', fontSize:13}}>
-                        Enter formal alist query
+                        Enter formal fnode query
                       </div>
                       <AceEditor
                         mode="json"
                         theme="github"
                         onChange={this.onEditorChange.bind(this)}
-                        name="alist_editor"
-                        value={this.state.editorAlist}
+                        name="fnode_editor"
+                        value={this.state.editorFnode}
                         editorProps={{ $blockScrolling: true }}
                         minLines={5} maxLines={50}
                         fontSize={16}
@@ -460,7 +459,7 @@ class Home extends Component {
                               </Button>
                           }
                         />
-                        <Button onClick={this.handleRIFQuery.bind(this, true)} color='orange' icon
+                        <Button onClick={this.handleQuery.bind(this, true)} color='orange' icon
                           style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
                           <Icon name='search' />
                         </Button>
@@ -546,8 +545,8 @@ class Home extends Component {
                   <Label.Detail style={{marginLeft: 3}}>{this.state.answer.elapsed_time}</Label.Detail>
                 </Label>
                 <div>
-                  <div style={{marginBottom: 0, marginTop: 10, marginRight: 5, fontWeight: 600, fontSize: 12, float: "left", color: "#444" }}>Answer Alist</div>
-                  <ReactJson src={this.state.answer.alist} theme='shapeshifter:inverted'
+                  <div style={{marginBottom: 0, marginTop: 10, marginRight: 5, fontWeight: 600, fontSize: 12, float: "left", color: "#444" }}>Answer Fnode</div>
+                  <ReactJson src={this.state.answer.fnode} theme='shapeshifter:inverted'
                     displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
                     style={{marginBottom: 20, marginTop: 10,  background: '#FFF', fontSize: 11, float: "left" }} />
                   <div style={{clear: "both"}} />
@@ -562,22 +561,22 @@ class Home extends Component {
                 background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
               }}>
                 
-                {/* {JSON.stringify(this.state.answer.alist)} */}
-                {isNullOrUndefined(this.state.answer.alist.xp) === false &&
+                {/* {JSON.stringify(this.state.answer.fnode)} */}
+                {isNullOrUndefined(this.state.answer.fnode.xp) === false &&
                   <div>
                     <div style={{fontWeight:600}}><Icon name='idea' size='large' color= 'grey'/><span style={{color:'#333333'}}>Explanation</span></div> 
                     <div style={{marginTop: 10, marginLeft: 30, color:'#333333'}}>
-                      {this.state.answer.alist.what!== undefined && this.state.answer.alist.what.length > 0 &&
-                        <span>{this.state.answer.alist.what}</span>
+                      {this.state.answer.fnode.what!== undefined && this.state.answer.fnode.what.length > 0 &&
+                        <span>{this.state.answer.fnode.what}</span>
                       }
-                      {this.state.answer.alist.why!== undefined && this.state.answer.alist.why.length > 0 &&
-                        <span>{' ' + this.state.answer.alist.why}</span>
+                      {this.state.answer.fnode.why!== undefined && this.state.answer.fnode.why.length > 0 &&
+                        <span>{' ' + this.state.answer.fnode.why}</span>
                       } 
-                      {this.state.answer.alist.how!== undefined && this.state.answer.alist.how.length > 0 &&
-                        <span>{' ' + this.state.answer.alist.how}</span>
+                      {this.state.answer.fnode.how!== undefined && this.state.answer.fnode.how.length > 0 &&
+                        <span>{' ' + this.state.answer.fnode.how}</span>
                       } 
-                      {this.state.answer.alist.sources!== undefined && this.state.answer.alist.sources.length > 0 &&
-                        <span>{' ' + this.state.answer.alist.sources}</span>
+                      {this.state.answer.fnode.sources!== undefined && this.state.answer.fnode.sources.length > 0 &&
+                        <span>{' ' + this.state.answer.fnode.sources}</span>
                       } 
                     </div>
                   </div>
@@ -591,8 +590,8 @@ class Home extends Component {
               <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
                 <Button basic color='white' icon='sitemap' content='Inference Graph'
                   style={{borderRadius:0, background:'transparent'}}
-                  onClick={()=>{this.setState({inferenceGraphView:true, questionView:false, alist_node: {}, 
-                            explanation:{all:'', what:'', how:'', why:'',sources:''}, loadingSelectedAlist: false}, ()=>this.checkForAnswer())}
+                  onClick={()=>{this.setState({inferenceGraphView:true, questionView:false, fnode_node: {}, 
+                            explanation:{all:'', what:'', how:'', why:'',sources:''}, loadingSelectedFnode: false}, ()=>this.checkForAnswer())}
                   }>
                 </Button>
                             
@@ -680,11 +679,11 @@ class Home extends Component {
                               
 
                   <div style={{ clear: 'both' }} />
-                      {this.state.loadingSelectedAlist &&
+                      {this.state.loadingSelectedFnode &&
                             <Image src='loading.svg' size='mini' style={{ objectFit: 'cover', height: '30px', marginLeft: 10 }} />
                       }
   
-                      {!this.state.loadingSelectedAlist && this.state.alist_node &&
+                      {!this.state.loadingSelectedFnode && this.state.fnode_node &&
                         <div> 
                           <div>
                             { (this.state.explanation.what.length > 0 || this.state.explanation.how.length > 0 || this.state.explanation.why.length > 0 || this.state.explanation.sources.length > 0 ) &&
@@ -706,14 +705,14 @@ class Home extends Component {
                           </div>
                           
                           <div style={{clear:'both', marginTop:15}} />
-                          {!this.state.loadingSelectedAlist && this.state.alist_node.h === "regress" && 
-                            <FrankChart alist={this.state.alist_node} />
+                          {!this.state.loadingSelectedFnode && this.state.fnode_node.h === "regress" && 
+                            <FrankChart fnode={config.sample_alist} />
                           }
-                          {Object.keys(this.state.alist_node).length > 0 &&
-                            // <div style={{ float: 'left', marginBottom:10 }}><span style={{fontWeight: 600}}>Alist: </span>{JSON.stringify(this.state.alist_node)}</div>
+                          {Object.keys(this.state.fnode_node).length > 0 &&
+                            // <div style={{ float: 'left', marginBottom:10 }}><span style={{fontWeight: 600}}>Alist: </span>{JSON.stringify(this.state.fnode_node)}</div>
                             <div>
-                              <div style={{fontWeight: 600, marginTop:30}}>Selected node alist</div>
-                              <ReactJson src={this.state.alist_node} theme='shapeshifter:inverted'
+                              <div style={{fontWeight: 600, marginTop:30}}>Selected node fnode</div>
+                              <ReactJson src={this.state.fnode_node} theme='shapeshifter:inverted'
                                 displayDataTypes={false} displayObjectSize={false} name={false} collapsed={false}
                                 style={{ padding: 10, background: '#FFF', fontSize: 11 }} />
                             </div>
@@ -726,10 +725,9 @@ class Home extends Component {
             <Sidebar.Pusher>
             <div>
             {
-              // (this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
-              isNullOrUndefined(this.state.answer.graph_nodes) === false &&
-              isNullOrUndefined(this.state.answer.graph_edges) === false &&
-              this.state.answer.graph_nodes.length > 0 &&
+              isNullOrUndefined(this.state.answer.graph) === false &&
+              isNullOrUndefined(this.state.answer.graph) === false &&
+              this.state.answer.graph.length > 0 &&
               <div style={{background: '#F7F7F7', position:'absolute', bottom:0, width:'100%'}}>
                 
                 
@@ -737,15 +735,18 @@ class Home extends Component {
                   {this.state.sidebarVisible === false &&
                     <Button onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='bars' style={{borderRadius:0}} />
                   }
-                  {/* <Button onClick={()=>this.checkForAnswer.bind(this)} icon='refresh' style={{borderRadius:0}} /> */}
                 </Button.Group>
                 
-                <CytoscapeGraph 
+                {/* <CytoscapeGraph 
                   data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} 
                   height='100vh'
                   handleNodeClick={this.handleNodeClick.bind(this)} 
                   handleUpdateCyObj={this.handleUpdateCyObj.bind(this)} 
-                  lastChanged={this.state.answer_data_last_changed} />
+                   />
+                   */}
+                   <InferenceFlowGraph data={this.state.answer.graph} 
+                      handleNodeClick={this.handleNodeClick.bind(this)}
+                      lastChanged={this.state.answer_data_last_changed} />
               </div>
             }
             </div>

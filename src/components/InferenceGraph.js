@@ -6,7 +6,7 @@ import '../network.css'
 class InferenceGraph extends Component {
   constructor() {
     super();
-    this.state = { data: {}, alist_string:'',
+    this.state = { data: {}, fnode_string:'',
       graphConfig : {
         "automaticRearrangeAfterDropNode": true,
         "height": 800,
@@ -83,15 +83,10 @@ class InferenceGraph extends Component {
 
   onMouseOverNode = function(nodeId) { 
 
-    this.setState({alist_string : "Selected alist: " + JSON.stringify(this.props.nodes.filter(x => x.id === nodeId)[0]) })
+    this.setState({fnode_string : "Selected fnode: " + JSON.stringify(this.props.nodes.filter(x => x.id === nodeId)[0]) })
   };
 
   render() {  
-    // const graphdata = {nodes: this.props.nodes, links: this.props.edges} 
-    // //this.state.data = graphdata
-    // this.setState({data : graphdata});   
-     
-
     return (
       <div style={{background:'#fff'}}>
           <Graph
