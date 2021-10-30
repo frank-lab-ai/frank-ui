@@ -24,3 +24,12 @@
 .ui.active.right.sidebar {
   margin-left: -600px !important;
 } */
+
+.react-flow__controls {
+    top: 60px;
+    right: 15px;
+    position: absolute;
+    z-index: 5;
+    left: auto;
+    bottom: auto
+}

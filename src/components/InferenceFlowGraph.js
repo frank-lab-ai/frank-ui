@@ -51,7 +51,7 @@ class InferenceFlowGraph extends Component {
 
   render() {  
     return (
-      <div style={{height:'100vh', marginTop:'-60px', backgroundColor:'#fff'}}>
+      <div style={{height:'100vh', paddingTop:60, backgroundColor:'#fff'}}>
          <ReactFlow
             elements={this.state.data}
             onElementsRemove={this.onElementsRemove.bind(this)}
@@ -61,9 +61,9 @@ class InferenceFlowGraph extends Component {
             snapToGrid={true}
             snapGrid={[15, 15]}
           >
-            {/* <MiniMap
+            <MiniMap
               nodeStrokeColor={(n) => {
-                if (n.style?.background) return n.style.background;
+                // if (n.style.background) return n.style.background;
                 if (n.type === 'input') return '#0041d0';
                 if (n.type === 'output') return '#ff0072';
                 if (n.type === 'default') return '#1a192b';
@@ -71,12 +71,12 @@ class InferenceFlowGraph extends Component {
                 return '#eee';
               }}
               nodeColor={(n) => {
-                if (n.style?.background) return n.style.background;
+                // if (n.style?.background) return n.style.background;
 
                 return '#fff';
               }}
               nodeBorderRadius={2}
-            /> */}
+            />
             <Controls />
             <Background color="#aaa" gap={16} />
           </ReactFlow>

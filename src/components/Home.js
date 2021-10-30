@@ -2,9 +2,7 @@ import React, { Component } from 'react';
 import { Button, Icon, Segment, Form, Modal, List, Header, Statistic, Label, Tab, Image, Popup, Grid, Menu, Sidebar, Checkbox } from 'semantic-ui-react';
 import ReactJson from 'react-json-view';
 import InferenceFlowGraph from './InferenceFlowGraph';
-import CytoscapeGraph from './CytoscapeGraph';
 import FrankChart from './FrankChart';
-import NumericInput from 'react-numeric-input';
 import '../home.css'
 import { isNullOrUndefined } from 'util';
 import { saveAs } from 'file-saver';
@@ -309,7 +307,9 @@ class Home extends Component {
     return (
       <div>
         <Menu stackable inverted={this.state.questionView}  secondary 
-                style={{borderRadius: '0px', margin: '0px', minHeight:'60px', background:this.state.questionView?'#2D3142':'#FFFFFF', zIndex: 9909 }}>
+                style={{borderRadius: '0px', margin: '0px', minHeight:'60px', 
+                background:this.state.questionView?'#2D3142':'#FFFFFF', zIndex: 9909,
+                position: 'absolute', width:'100%'}}>
           <Menu.Item header>
               <Header as='h1' style={{color:'#c1d2e1'}}>
                 <Image src={require('./../frank-logo.png')} centered style={{width: 90}}/>
@@ -336,7 +336,8 @@ class Home extends Component {
           </Menu.Item>
           
           {this.state.inferenceGraphView &&
-            <Menu.Menu stackable inverted={this.state.questionView} secondary position='right'>
+            <Menu.Menu stackable inverted={this.state.questionView} secondary position='right' 
+              >
               {/* <Menu.Item as={Checkbox} toggle label='auto refresh' checked={this.state.autorefresh_graph} onChange={(e,d)=>{this.setState({autorefresh_graph: d.checked})} } /> */}
               <Menu.Item  onClick={()=>{this.checkForAnswer(); this.setState({answer_data_last_changed:new Date().getSeconds()})} } >
                 <Icon name='refresh' />
@@ -359,10 +360,9 @@ class Home extends Component {
 
         {/* Question view */}
         {this.state.questionView &&
-          <div>
-           
-            
-          <Segment inverted secondary style={{ borderRadius: '0px', margin: '0px', background: '#2D3142' }}>
+          <div>            
+          <Segment inverted secondary style={{ borderRadius: '0px', margin: '0px', background: '#2D3142',
+            paddingTop:100 }}>
           
             <div style={{ maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto' }}>
                 <Label as='a' content='Try these examples' icon='info'
@@ -495,9 +495,6 @@ class Home extends Component {
 
 
           <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px', marginTop: '35px' }}>
-            {/* {this.state.loading && !this.state.final_answer_returned && !this.state.intermediate_answer_returned &&
-              <Image src='loading.svg' centered size='tiny' />
-            } */}
             <div style={{ clear: 'both' }} />
             {this.state.isError &&
               <div style={{
@@ -647,20 +644,24 @@ class Home extends Component {
         
         {/* Inference graph view */}
         {this.state.inferenceGraphView &&
-          <Sidebar.Pushable as={Segment} style={{borderWidth:0, margin:0, marginBottom:'-60px', borderRadius:0, height:'100vh', width:'100%', overflow:'hidden', 
-            position: 'absolute', bottom:0, zIndex: 1}}>
+          <Sidebar.Pushable as={Segment} style={{borderWidth:0, margin:0, marginBottom:'-60px', borderRadius:0, 
+            height:'100vh', width:'100%', overflow:'hidden', 
+            position: 'absolute', bottom:0, top:0, zIndex: 1}}>
             <Sidebar
-              as={Segment}
+              // as={Segment}
               animation='overlay'
               direction='left'
               visible={this.state.sidebarVisible}
               width='very wide'
-              style={{borderWidth:0, margin:0, borderRadius:0, width:540, position:'absolute', bottom:0, paddingBottom:65}}
+              style={{borderWidth:0, margin:0, borderRadius:0, width:540, position:'absolute', bottom:0,
+                 paddingBottom:65, background:'rgb(0,0,0,0)', overflow:'hidden !important', boxShadow: 'unset'}}
             >
               <div style={{
                   borderRadius: '0px', paddingLeft: '10px', marginTop: 0, marginBottom: 0,
-                  border: 'none', color: '#000', minHeight: 50
+                  border: 'none', color: '#000', minHeight: 50, overflow:'hidden !important'
                 }}>
+                  <Segment raised style={{marginTop:70, marginLeft:15, height:"80vh", marginRight:10,
+                    overflowX:'hidden', overflowY:'scroll'}}>
 
                   <Button color='white' onClick={()=>this.setState({sidebarVisible: false})} icon='angle left' content='Hide'
                     style={{borderRadius:0, marginTop:'-10px', background: 'transparent', paddingLeft: 0}} /> 
@@ -706,7 +707,7 @@ class Home extends Component {
                           
                           <div style={{clear:'both', marginTop:15}} />
                           {!this.state.loadingSelectedFnode && this.state.fnode_node.h === "regress" && 
-                            <FrankChart fnode={config.sample_alist} />
+                            <FrankChart fnode={this.state.fnode_node} />
                           }
                           {Object.keys(this.state.fnode_node).length > 0 &&
                             // <div style={{ float: 'left', marginBottom:10 }}><span style={{fontWeight: 600}}>Alist: </span>{JSON.stringify(this.state.fnode_node)}</div>
@@ -719,6 +720,7 @@ class Home extends Component {
                           }
                         </div>
                       }
+                    </Segment>
                                           
                 </div>
             </Sidebar>
@@ -728,14 +730,14 @@ class Home extends Component {
               isNullOrUndefined(this.state.answer.graph) === false &&
               isNullOrUndefined(this.state.answer.graph) === false &&
               this.state.answer.graph.length > 0 &&
-              <div style={{background: '#F7F7F7', position:'absolute', bottom:0, width:'100%'}}>
+              <div style={{background: '#FFF', position:'absolute', bottom:0, width:'100%'}}>
                 
                 
-                <Button.Group style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 65 : 0, position:'absolute', zIndex:9999 }}>
+                {/* <Button.Group style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 65 : 0, position:'absolute', zIndex:9999 }}>
                   {this.state.sidebarVisible === false &&
                     <Button onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='bars' style={{borderRadius:0}} />
                   }
-                </Button.Group>
+                </Button.Group> */}
                 
                 {/* <CytoscapeGraph 
                   data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} 
