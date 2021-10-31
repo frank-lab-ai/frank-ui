@@ -40,13 +40,14 @@ class Home extends Component {
     super();
     this.state = {
       query: '', templates: [], activeIndex: 10, fnode: {}, fnode_string: '',
-      answer: {}, loading: false, final_answer_returned: false, intermediate_answer_returned: false, errorMessage: '', examplesOpen: false, sessionId: '',
+      answer: {}, loading: false, final_answer_returned: false, intermediate_answer_returned: false, errorMessage: '', 
+      examplesOpen: false, sessionId: '',
       currentCount: 0, intervalId: null, timedOut: false,
       maxCheckAttempts: 600, // 600 attempts with 3 seconds intervals = 30 hour before UI timeout. 
       answerCheckInterval: 3000, //3 seconds
       questionAnswered: '', fnode_node: {}, loadingSelectedFnode: false,
       ancestorBlanketLength: 1, descendantBlanketLength:1, explanation:{what:'', how:'', why:'', sources:''}, traceOpen:false,
-      plotData:{}, questionView:true, inferenceGraphView:false, sidebarVisible: false, cy: null,
+      plotData:{}, questionView:false, inferenceGraphView:true, sidebarVisible: true, cy: null,
       nlView: true, editorFnode:'{"h":"value"}', autorefresh_graph:true,
       defaultContext:[
         {},
@@ -306,9 +307,9 @@ class Home extends Component {
 
     return (
       <div>
-        <Menu stackable inverted={this.state.questionView}  secondary 
+        <Menu stackable  secondary 
                 style={{borderRadius: '0px', margin: '0px', minHeight:'60px', 
-                background:this.state.questionView?'#2D3142':'#FFFFFF', zIndex: 9909,
+                background:'#FFFFFF', zIndex: 9909,
                 position: 'absolute', width:'100%'}}>
           <Menu.Item header>
               <Header as='h1' style={{color:'#c1d2e1'}}>
@@ -316,29 +317,26 @@ class Home extends Component {
               </Header>
           </Menu.Item>
           <Menu.Item>
-              <Header.Subheader  style={{color:this.state.questionView?'#c1d2e1':'#2D3142', paddingBottom:10}}>
-                {this.state.questionView ? 
-                  <span style={{fontSize:17, fontWeight:400}}>Functional Reasoner for Acquiring New Knowledge</span> : 
-                  <span><span style={{fontSize:17, fontWeight:400, marginRight: 30, color:'#009999', float:'left'}}>Inference Explorer</span> 
-                <div style={{whiteSpace: "nowrap", maxWidth: "400px", overflow: "hidden", textOverflow: "ellipsis", float:"left"}}>
-                  {this.state.query}
-                </div>               
-                </span>}
+              <Header.Subheader  style={{color:'#2D3142', paddingBottom:10}}>
+                
+                <span style={{fontSize:17, fontWeight:400}}>Functional Reasoner for Acquiring New Knowledge</span>
+                {/* <span><span style={{fontSize:17, fontWeight:400, marginRight: 30, color:'#009999', float:'left'}}>Inference Explorer</span> 
+                  <div style={{whiteSpace: "nowrap", maxWidth: "400px", overflow: "hidden", textOverflow: "ellipsis", float:"left"}}>
+                    {this.state.query}
+                  </div>               
+                </span> */}
                 </Header.Subheader>
-              {/* {this.state.questionView &&
-              <Label size='tiny' style={{
-                background:this.state.questionView?'#252937':'#E8EAED',
-                color:this.state.questionView?'#7B8893':'#6E6E6E', marginBottom: 10 }}>v 0.2.0</Label>
-              } */}
               {this.state.inferenceGraphView && (this.state.loadingSelectedFnode || this.state.loading) &&
                   <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px', marginLeft: 10 }} />
               }  
           </Menu.Item>
           
           {this.state.inferenceGraphView &&
-            <Menu.Menu stackable inverted={this.state.questionView} secondary position='right' 
+            <Menu.Menu stackable secondary position='right' 
               >
-              {/* <Menu.Item as={Checkbox} toggle label='auto refresh' checked={this.state.autorefresh_graph} onChange={(e,d)=>{this.setState({autorefresh_graph: d.checked})} } /> */}
+              <Menu.Item  onClick={() => this.setState({ examplesOpen: true })} >
+                Examples
+              </Menu.Item>
               <Menu.Item  onClick={()=>{this.checkForAnswer(); this.setState({answer_data_last_changed:new Date().getSeconds()})} } >
                 <Icon name='refresh' />
                 Refresh
@@ -348,307 +346,17 @@ class Home extends Component {
                 <Icon name='download' />
               </Menu.Item>
               }
-              <Menu.Item onClick={()=>this.setState({questionView:true, inferenceGraphView:false})} >
-                <Icon name='edit outline' />
-                Return to question
-              </Menu.Item>
             </Menu.Menu>
           }
           
           
         </Menu>
-
-        {/* Question view */}
-        {this.state.questionView &&
-          <div>            
-          <Segment inverted secondary style={{ borderRadius: '0px', margin: '0px', background: '#2D3142',
-            paddingTop:100 }}>
-          
-            <div style={{ maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto' }}>
-                <Label as='a' content='Try these examples' icon='info'
-                onClick={() => this.setState({ examplesOpen: true })} style={{
-                  marginBottom: 5, float: 'right',
-                  background: '#252937', color: '#7B8893'
-                }} />
-              <div style={{ clear: 'both' }} />
-                {this.state.nlView &&
         
-                        
-                        <Form style={{ marginBottom: 0 }} /*onSubmit={this.handleRIFQuery.bind(this, false)}*/>
-                          <Form.Input className='no_input_focus'
-                            value={this.state.query}
-                            style={whiteBgStyle} size='large' transparent
-                            placeholder='Type your question...'
-                            action={
-                              <Button.Group>
-                                <Popup basic inverted position='bottom center' style={{padding:3, fontSize:12}}
-                                  content='Switch to fnode (formal) input'
-                                  trigger={<Button basic onClick={()=>{this.setState({nlView:false})}} icon type='button'
-                                    style={{ borderRadius: '0px', marginLeft: '8px' }} size='large' >
-                                    <Icon name='code' color='grey' />
-                                  </Button>
-                                  } 
-                                />
-                                <Button onClick={this.handleQuery.bind(this, false)} color='orange' icon
-                                  style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
-                                  <Icon name='search' />
-                                </Button>
-                              </Button.Group>
 
-                            }
-                            list='templates'
-                            onChange={this.handleChangeQuery.bind(this)}
-                          />
-                          {this.state.query.trim() !== "" &&
-                            <div>
-                              <div style={{ background: '#404353', padding: 10, paddingTop: 20, marginTop: '-14px' }}>
-
-                              
-                                <p style={{ fontSize: 13, fontWeight: '700', color: '#A9BAC9' }}>
-                                  Generated Fnode
-                                <Popup inverted trigger={
-                                    <Icon size='large' color='orange' name='question circle' style={{ marginTop: '-5px', marginLeft: '5px' }} />
-                                  }
-                                    content={<p> An fnode is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.
-                                  Attribute names:<ul>
-                                        <li>h = operation</li>
-                                        <li>v = operation variable</li>
-                                        <li>s = subject</li>
-                                        <li>p = property (or predicate)</li>
-                                        <li>o = object</li>
-                                        <li>t = time</li>
-                                        <li>u = uncertainty</li>
-                                        <li>xp = explanation</li>
-                                      </ul></p>}
-                                  />:
-                              </p>
-                                {/* <p style={{fontSize:13, fontWeight:'400', color:'#A9BAC9'}}>{this.state.fnode_string}</p> */}
-                                <ReactJson src={this.state.fnode} theme='monokai'
-                                  displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
-                                  style={{ padding: 10, background: '#404353', fontSize: 11 }} />
-                              </div>
-                            </div>
-                          }
-                        </Form>
-                  }
-                  {this.state.nlView === false &&
-                    <div style={{background:'#FFF', paddingBottom: 5, paddingRight: 5}}>
-                      <div style={{width:'100%', padding:8, background:'#E8E8E8', color:'#606469', fontSize:13}}>
-                        Enter formal fnode query
-                      </div>
-                      <AceEditor
-                        mode="json"
-                        theme="github"
-                        onChange={this.onEditorChange.bind(this)}
-                        name="fnode_editor"
-                        value={this.state.editorFnode}
-                        editorProps={{ $blockScrolling: true }}
-                        minLines={5} maxLines={50}
-                        fontSize={16}
-                        width='100%'
-                        showPrintMargin={false}
-                        wrapEnabled={true}
-                      />
-                      <Button.Group style={{float:'right'}}>
-                        <Popup basic inverted position='bottom center' style={{padding:3, fontSize:12}}
-                          content='Switch to natural language text input'
-                          trigger= {                          
-                              <Button basic onClick={()=>{this.setState({nlView:true})}} icon
-                                style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
-                                <Icon name='font' color='grey' size='small'/> 
-                              </Button>
-                          }
-                        />
-                        <Button onClick={this.handleQuery.bind(this, true)} color='orange' icon
-                          style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
-                          <Icon name='search' />
-                        </Button>
-                      </Button.Group>
-                      <div style={{clear:'both'}} />
-                    </div>
-                  }        
-              
-              <br />
-            </div>
-          </Segment>
-        
-          <Modal
-            header='Examples of questions'
-            centered={false}
-            content={
-              <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
-                <List link >
-                  {this.queryEx.map((ex, index) =>
-                    <List.Item as='a' key={index} onClick={this.handleExItemClick}
-                      style={{ color: 'black', fontSize: 15, margin: 5 }}>{ex}</List.Item>
-                  )
-                  }
-                </List>
-              </div>
-            }
-            open={this.state.examplesOpen}
-            onClose={() => this.setState({ examplesOpen: false })}
-            closeOnDimmerClick={true}
-            closeOnEscape={true}
-            actions={[{ key: 'close', content: 'Close', }]}
-          />
-
-
-          <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px', marginTop: '35px' }}>
-            <div style={{ clear: 'both' }} />
-            {this.state.isError &&
-              <div style={{
-                borderRadius: '0px', padding: '20px',
-                border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
-              }}>
-                <span style={{ fontSize: 13 }}> <Icon name='exclamation triangle' color='yellow' size='large' /> {this.state.errorMessage} </span>
-              </div>
-            }
-            {(this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
-              <Segment style={{
-                borderRadius: '0px', paddingLeft: '20px', paddingBottom: 0,
-                background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
-              }}>
-                {this.state.loading &&
-                  <Image src='loading.svg' centered size='tiny' style={{ objectFit: 'cover', height: '30px', float: 'right' }} />
-                }
-                <div>
-                  <div style={{ fontSize: 15, marginBottom: 10, marginTop: 10 }} >
-                    {this.state.questionAnswered}
-                  </div>
-                  <Statistic style={{ float: 'left', marginRight: '30px', marginTop: '20px', marginBottom: 10, fontSize: '10px' }}>
-                    <div style={{ fontSize: 40, fontWeight: '400' }} >{this.state.answer.answer}</div>
-                  </Statistic>
-
-                  {parseFloat(this.state.answer.error_bar) > 0 &&
-                    <Statistic style={{ float: 'left', marginLeft: '10px', marginTop: '20px' }}>
-                      <Statistic.Label > &plusmn; {this.state.answer.error_bar}</Statistic.Label>
-                    </Statistic>
-                  }
-                </div>
-                <div style={{ clear: 'both' }} />
-                {/* <Statistic horizontal>
-                  
-                
-                </Statistic> */}
-                <br />
-                <Label basic as='span' color='orange' style={{ marginTop: '2px', borderRadius:0, borderWidth:0, paddingLeft:0, marginRight:20, fontWeight:400 }}>
-                  <Icon name='globe' />Source:
-                  <Label.Detail style={{marginLeft: 3}}>{this.state.answer.sources}</Label.Detail>
-                </Label>
-
-                <Label basic as='span'  color='grey' style={{ marginTop: '2px', borderRadius:0, borderWidth:0, paddingLeft:0, fontWeight:400   }}>
-                  <Icon name='hourglass end' />Time:
-                  <Label.Detail style={{marginLeft: 3}}>{this.state.answer.elapsed_time}</Label.Detail>
-                </Label>
-                <div>
-                  <div style={{marginBottom: 0, marginTop: 10, marginRight: 5, fontWeight: 600, fontSize: 12, float: "left", color: "#444" }}>Answer Fnode</div>
-                  <ReactJson src={this.state.answer.fnode} theme='shapeshifter:inverted'
-                    displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
-                    style={{marginBottom: 20, marginTop: 10,  background: '#FFF', fontSize: 11, float: "left" }} />
-                  <div style={{clear: "both"}} />
-                </div>
-              </Segment>
-              
-            }
-
-          {(this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
-              <Segment style={{
-                borderRadius: '0px', paddingLeft: '20px', paddingBottom: 20,
-                background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
-              }}>
-                
-                {/* {JSON.stringify(this.state.answer.fnode)} */}
-                {isNullOrUndefined(this.state.answer.fnode.xp) === false &&
-                  <div>
-                    <div style={{fontWeight:600}}><Icon name='idea' size='large' color= 'grey'/><span style={{color:'#333333'}}>Explanation</span></div> 
-                    <div style={{marginTop: 10, marginLeft: 30, color:'#333333'}}>
-                      {this.state.answer.fnode.what!== undefined && this.state.answer.fnode.what.length > 0 &&
-                        <span>{this.state.answer.fnode.what}</span>
-                      }
-                      {this.state.answer.fnode.why!== undefined && this.state.answer.fnode.why.length > 0 &&
-                        <span>{' ' + this.state.answer.fnode.why}</span>
-                      } 
-                      {this.state.answer.fnode.how!== undefined && this.state.answer.fnode.how.length > 0 &&
-                        <span>{' ' + this.state.answer.fnode.how}</span>
-                      } 
-                      {this.state.answer.fnode.sources!== undefined && this.state.answer.fnode.sources.length > 0 &&
-                        <span>{' ' + this.state.answer.fnode.sources}</span>
-                      } 
-                    </div>
-                  </div>
-                  
-                }
-              </Segment>
-            }
-
-            {/* {(this.state.final_answer_returned || this.state.intermediate_answer_returned) && */}
-            {(this.state.currentCount > 0) &&
-              <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
-                <Button basic color='white' icon='sitemap' content='Inference Graph'
-                  style={{borderRadius:0, background:'transparent'}}
-                  onClick={()=>{this.setState({inferenceGraphView:true, questionView:false, fnode_node: {}, 
-                            explanation:{all:'', what:'', how:'', why:'',sources:''}, loadingSelectedFnode: false}, ()=>this.checkForAnswer())}
-                  }>
-                </Button>
-                            
-
-                <Modal
-                  trigger={<Button basic color='white' icon='align left' content='Trace'
-                              style={{borderRadius:0, background:'transparent'}} onClick={()=>this.setState({traceOpen:true})}></Button>}
-                  centered={false}
-                  open={this.state.traceOpen}
-                  onClose={() => this.setState({ traceOpen: false })}
-                  closeOnDimmerClick={true}
-                  closeOnEscape={true}
-                  size='fullscreen' dimmer='blurring'
-                >
-                  <Modal.Header>Inference Trace</Modal.Header>
-                  <Modal.Content scrolling>
-                    <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
-                      <List divided relaxed size='tiny'>
-                          {isNullOrUndefined(this.state.answer.trace) === false ?
-                            this.state.answer.trace.map((item, index) => { return <List.Item key={index} >{item}</List.Item> })
-                            : ""}
-                      </List>
-                    </div>
-                  </Modal.Content>
-                  <Modal.Actions>
-                    <Button onClick={() => this.setState({ traceOpen: false })}>
-                      Close
-                    </Button>
-                  </Modal.Actions>
-                </Modal>
-
-              </div>
-            }
-            {this.state.loading && !this.state.final_answer_returned && !this.state.intermediate_answer_returned &&
-              <Image src='loading.svg' centered size='tiny' />
-            }
-
-            {!this.state.final_answer_returned && this.state.timedOut && !this.state.isError &&
-              <div style={{
-                borderRadius: '0px', paddingLeft: '0px',
-                border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
-              }}>
-                <div style={{ padding: 10, paddingLeft: 0, color: 'orange' }}>
-                  <span> <Icon name='clock' style={{ fontSize: 20 }} /> FRANK timed out.</span>
-
-                </div>
-
-              </div>
-            }
-          </Segment>
-        </div>
-        }
-        
-        {/* Inference graph view */}
-        {this.state.inferenceGraphView &&
           <Sidebar.Pushable as={Segment} style={{borderWidth:0, margin:0, marginBottom:'-60px', borderRadius:0, 
             height:'100vh', width:'100%', overflow:'hidden', 
             position: 'absolute', bottom:0, top:0, zIndex: 1}}>
             <Sidebar
-              // as={Segment}
               animation='overlay'
               direction='left'
               visible={this.state.sidebarVisible}
@@ -656,16 +364,269 @@ class Home extends Component {
               style={{borderWidth:0, margin:0, borderRadius:0, width:540, position:'absolute', bottom:0,
                  paddingBottom:65, background:'rgb(0,0,0,0)', overflow:'hidden !important', boxShadow: 'unset'}}
             >
+    
               <div style={{
                   borderRadius: '0px', paddingLeft: '10px', marginTop: 0, marginBottom: 0,
                   border: 'none', color: '#000', minHeight: 50, overflow:'hidden !important'
                 }}>
-                  <Segment raised style={{marginTop:70, marginLeft:15, height:"80vh", marginRight:10,
+                  <Segment raised style={{marginTop:70, marginLeft:15, maxHeight:"80vh", marginRight:10,
                     overflowX:'hidden', overflowY:'auto'}}>
 
                   <Button color='white' onClick={()=>this.setState({sidebarVisible: false})} icon='angle left' content='Hide'
                     style={{borderRadius:0, marginTop:'-10px', background: 'transparent', paddingLeft: 0}} /> 
 
+
+                  {/* Query editor start */}
+                  <div style={{background: 'rgb(100,100,100,0)',}}>            
+                  <Segment basic inverted secondary style={{ borderRadius: '0px', marginTop: '5px', background: '#2D3142',
+                    paddingTop:5, maxWidth: '100%', marginLeft:'auto', marginRight:'auto', }}>
+                    <div style={{padding:5}}>Query</div>
+                  
+                    <div style={{ width: '100%' }}>
+                      <div style={{ clear: 'both' }} />
+                        {this.state.nlView &&
+                
+                                
+                                <Form style={{ marginBottom: 0 }} >
+                                  <Form.Input className='no_input_focus'
+                                    value={this.state.query}
+                                    style={whiteBgStyle} size='large' transparent
+                                    placeholder='Type your question...'
+                                    action={
+                                      <Button.Group>
+                                        <Popup basic inverted position='bottom center' style={{padding:3, fontSize:12}}
+                                          content='Switch to fnode (formal) input'
+                                          trigger={<Button basic onClick={()=>{this.setState({nlView:false})}} icon type='button'
+                                            style={{ borderRadius: '0px', marginLeft: '8px' }} size='large' >
+                                            <Icon name='code' color='grey' />
+                                          </Button>
+                                          } 
+                                        />
+                                        <Button onClick={this.handleQuery.bind(this, false)} color='orange' icon
+                                          style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
+                                          <Icon name='search' />
+                                        </Button>
+                                      </Button.Group>
+
+                                    }
+                                    list='templates'
+                                    onChange={this.handleChangeQuery.bind(this)}
+                                  />
+                                  {this.state.query.trim() !== "" &&
+                                    <div>
+                                      <div style={{ background: '#404353', padding: 10, paddingTop: 20, marginTop: '-14px' }}>
+
+                                      
+                                        <p style={{ fontSize: 13, fontWeight: '700', color: '#A9BAC9' }}>
+                                          Generated Fnode
+                                        <Popup inverted trigger={
+                                            <Icon size='large' color='orange' name='question circle' style={{ marginTop: '-5px', marginLeft: '5px' }} />
+                                          }
+                                            content={<p> An fnode is a set of attribute-value pairs. It is the internal formal representation of questions and data in FRANK.
+                                          Attribute names:<ul>
+                                                <li>h = operation</li>
+                                                <li>v = operation variable</li>
+                                                <li>s = subject</li>
+                                                <li>p = property (or predicate)</li>
+                                                <li>o = object</li>
+                                                <li>t = time</li>
+                                                <li>u = uncertainty</li>
+                                                <li>xp = explanation</li>
+                                              </ul></p>}
+                                          />:
+                                      </p>
+                                        <ReactJson src={this.state.fnode} theme='monokai'
+                                          displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
+                                          style={{ padding: 10, background: '#404353', fontSize: 11 }} />
+                                      </div>
+                                    </div>
+                                  }
+                                </Form>
+                          }
+                          {this.state.nlView === false &&
+                            <div style={{background:'#FFF', paddingBottom: 5, paddingRight: 5}}>
+                              <div style={{width:'100%', padding:8, background:'#E8E8E8', color:'#606469', fontSize:13}}>
+                                Enter formal fnode query
+                              </div>
+                              <AceEditor
+                                mode="json"
+                                theme="github"
+                                onChange={this.onEditorChange.bind(this)}
+                                name="fnode_editor"
+                                value={this.state.editorFnode}
+                                editorProps={{ $blockScrolling: true }}
+                                minLines={5} maxLines={50}
+                                fontSize={16}
+                                width='100%'
+                                showPrintMargin={false}
+                                wrapEnabled={true}
+                              />
+                              <Button.Group style={{float:'right'}}>
+                                <Popup basic inverted position='bottom center' style={{padding:3, fontSize:12}}
+                                  content='Switch to natural language text input'
+                                  trigger= {                          
+                                      <Button basic onClick={()=>{this.setState({nlView:true})}} icon
+                                        style={{ borderRadius: '0px', marginLeft: '8px' }} size='large'>
+                                        <Icon name='font' color='grey' size='small'/> 
+                                      </Button>
+                                  }
+                                />
+                                <Button onClick={this.handleQuery.bind(this, true)} color='orange' icon
+                                  style={{ borderRadius: '0px', marginLeft: '2px' }} size='large'>
+                                  <Icon name='search' />
+                                </Button>
+                              </Button.Group>
+                              <div style={{clear:'both'}} />
+                            </div>
+                          }        
+                      
+                      <br />
+                    </div>
+                  </Segment>
+
+                  <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px', marginTop: '35px', width: '100%' }}>
+                    <div style={{ clear: 'both' }} />
+                    {this.state.isError &&
+                      <div style={{
+                        borderRadius: '0px', padding: '20px',
+                        border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
+                      }}>
+                        <span style={{ fontSize: 13 }}> <Icon name='exclamation triangle' color='yellow' size='large' /> {this.state.errorMessage} </span>
+                      </div>
+                    }
+                    {(this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
+                      <Segment style={{
+                        borderRadius: '0px', paddingLeft: '20px', paddingBottom: 0,
+                        background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
+                      }}>
+                        {this.state.loading &&
+                          <Image src='loading.svg' centered size='tiny' style={{ objectFit: 'cover', height: '30px', float: 'right' }} />
+                        }
+                        <div>
+                          <div style={{ fontSize: 15, marginBottom: 10, marginTop: 10 }} >
+                            {this.state.questionAnswered}
+                          </div>
+                          <Statistic style={{ float: 'left', marginRight: '30px', marginTop: '20px', marginBottom: 10, fontSize: '10px' }}>
+                            <div style={{ fontSize: 40, fontWeight: '400' }} >{this.state.answer.answer}</div>
+                          </Statistic>
+
+                          {parseFloat(this.state.answer.error_bar) > 0 &&
+                            <Statistic style={{ float: 'left', marginLeft: '10px', marginTop: '20px' }}>
+                              <Statistic.Label > &plusmn; {this.state.answer.error_bar}</Statistic.Label>
+                            </Statistic>
+                          }
+                        </div>
+                        <div style={{ clear: 'both' }} />
+                        <br />
+                        <Label basic as='span' color='orange' style={{ marginTop: '2px', borderRadius:0, borderWidth:0, paddingLeft:0, marginRight:20, fontWeight:400 }}>
+                          <Icon name='globe' />Source:
+                          <Label.Detail style={{marginLeft: 3}}>{this.state.answer.sources}</Label.Detail>
+                        </Label>
+
+                        <Label basic as='span'  color='grey' style={{ marginTop: '2px', borderRadius:0, borderWidth:0, paddingLeft:0, fontWeight:400   }}>
+                          <Icon name='hourglass end' />Time:
+                          <Label.Detail style={{marginLeft: 3}}>{this.state.answer.elapsed_time}</Label.Detail>
+                        </Label>
+                        <div>
+                          <div style={{marginBottom: 0, marginTop: 10, marginRight: 5, fontWeight: 600, fontSize: 12, float: "left", color: "#444" }}>Answer Fnode</div>
+                          <ReactJson src={this.state.answer.fnode} theme='shapeshifter:inverted'
+                            displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
+                            style={{marginBottom: 20, marginTop: 10,  background: '#FFF', fontSize: 11, float: "left" }} />
+                          <div style={{clear: "both"}} />
+                        </div>
+                      </Segment>
+                      
+                    }
+
+                  {(this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
+                      <Segment style={{
+                        borderRadius: '0px', paddingLeft: '20px', paddingBottom: 20,
+                        background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
+                      }}>
+                        
+                        {isNullOrUndefined(this.state.answer.fnode.xp) === false &&
+                          <div>
+                            <div style={{fontWeight:600}}><Icon name='idea' size='large' color= 'grey'/><span style={{color:'#333333'}}>Explanation</span></div> 
+                            <div style={{marginTop: 10, marginLeft: 30, color:'#333333'}}>
+                              {this.state.answer.fnode.what!== undefined && this.state.answer.fnode.what.length > 0 &&
+                                <span>{this.state.answer.fnode.what}</span>
+                              }
+                              {this.state.answer.fnode.why!== undefined && this.state.answer.fnode.why.length > 0 &&
+                                <span>{' ' + this.state.answer.fnode.why}</span>
+                              } 
+                              {this.state.answer.fnode.how!== undefined && this.state.answer.fnode.how.length > 0 &&
+                                <span>{' ' + this.state.answer.fnode.how}</span>
+                              } 
+                              {this.state.answer.fnode.sources!== undefined && this.state.answer.fnode.sources.length > 0 &&
+                                <span>{' ' + this.state.answer.fnode.sources}</span>
+                              } 
+                            </div>
+                          </div>
+                          
+                        }
+                      </Segment>
+                    }
+
+                    {(this.state.currentCount > 0) &&
+                      <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
+                        {/* <Button basic color='white' icon='sitemap' content='Inference Graph'
+                          style={{borderRadius:0, background:'transparent'}}
+                          onClick={()=>{this.setState({inferenceGraphView:true, questionView:false, fnode_node: {}, 
+                                    explanation:{all:'', what:'', how:'', why:'',sources:''}, loadingSelectedFnode: false}, ()=>this.checkForAnswer())}
+                          }>
+                        </Button> */}
+                                    
+
+                        {/* <Modal
+                          trigger={<Button basic color='white' icon='align left' content='Trace'
+                                      style={{borderRadius:0, background:'transparent'}} onClick={()=>this.setState({traceOpen:true})}></Button>}
+                          centered={false}
+                          open={this.state.traceOpen}
+                          onClose={() => this.setState({ traceOpen: false })}
+                          closeOnDimmerClick={true}
+                          closeOnEscape={true}
+                          size='fullscreen' dimmer='blurring'
+                        >
+                          <Modal.Header>Inference Trace</Modal.Header>
+                          <Modal.Content scrolling>
+                            <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
+                              <List divided relaxed size='tiny'>
+                                  {isNullOrUndefined(this.state.answer.trace) === false ?
+                                    this.state.answer.trace.map((item, index) => { return <List.Item key={index} >{item}</List.Item> })
+                                    : ""}
+                              </List>
+                            </div>
+                          </Modal.Content>
+                          <Modal.Actions>
+                            <Button onClick={() => this.setState({ traceOpen: false })}>
+                              Close
+                            </Button>
+                          </Modal.Actions>
+                        </Modal> */}
+
+                      </div>
+                    }
+                    {this.state.loading && !this.state.final_answer_returned && !this.state.intermediate_answer_returned &&
+                      <Image src='loading.svg' centered size='tiny' />
+                    }
+
+                    {!this.state.final_answer_returned && this.state.timedOut && !this.state.isError &&
+                      <div style={{
+                        borderRadius: '0px', paddingLeft: '0px',
+                        border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
+                      }}>
+                        <div style={{ padding: 10, paddingLeft: 0, color: 'orange' }}>
+                          <span> <Icon name='clock' style={{ fontSize: 20 }} /> FRANK timed out.</span>
+
+                        </div>
+
+                      </div>
+                    }
+                  </Segment>
+              </div>
+                  {/* end of query bar */}
+
+                  {this.state.fnode_node && this.state.answer.graph !== undefined &&
                   <div style={{paddingTop: 10, marginBottom:15}}>
                     <div  style={{marginLeft: 0, paddingTop:0, paddingBottom:10}}>Explanation Blanket Lengths:</div>
                     <div>
@@ -677,7 +638,7 @@ class Home extends Component {
                       <div style={{clear:'both'}} />
                     </div>
                   </div>
-                              
+                  }  
 
                   <div style={{ clear: 'both' }} />
                       {this.state.loadingSelectedFnode &&
@@ -710,7 +671,6 @@ class Home extends Component {
                             <FrankChart fnode={this.state.fnode_node} />
                           }
                           {Object.keys(this.state.fnode_node).length > 0 &&
-                            // <div style={{ float: 'left', marginBottom:10 }}><span style={{fontWeight: 600}}>Alist: </span>{JSON.stringify(this.state.fnode_node)}</div>
                             <div>
                               <div style={{fontWeight: 600, marginTop:30}}>Selected node fnode</div>
                               <ReactJson src={this.state.fnode_node} theme='shapeshifter:inverted'
@@ -720,41 +680,44 @@ class Home extends Component {
                           }
                         </div>
                       }
-                    </Segment>
+                  </Segment>
                                           
-                </div>
+              </div>
             </Sidebar>
             <Sidebar.Pusher>
             <div>
-            {
-              isNullOrUndefined(this.state.answer.graph) === false &&
-              isNullOrUndefined(this.state.answer.graph) === false &&
-              this.state.answer.graph.length > 0 &&
+              
               <div style={{background: '#FFF', position:'absolute', bottom:0, width:'100%'}}>
-                
-                
-                {/* <Button.Group style={{borderRadius:0, marginLeft: this.state.sidebarVisible? 65 : 0, position:'absolute', zIndex:9999 }}>
-                  {this.state.sidebarVisible === false &&
-                    <Button onClick={()=>this.setState({sidebarVisible: !this.state.sidebarVisible})} icon='bars' style={{borderRadius:0}} />
-                  }
-                </Button.Group> */}
-                
-                {/* <CytoscapeGraph 
-                  data={{nodes: this.state.answer.graph_nodes, edges: this.state.answer.graph_edges}} 
-                  height='100vh'
-                  handleNodeClick={this.handleNodeClick.bind(this)} 
-                  handleUpdateCyObj={this.handleUpdateCyObj.bind(this)} 
-                   />
-                   */}
-                   <InferenceFlowGraph data={this.state.answer.graph} 
-                      handleNodeClick={this.handleNodeClick.bind(this)}
-                      lastChanged={this.state.answer_data_last_changed} />
+
+                <InferenceFlowGraph data={this.state.answer.graph} 
+                  handleNodeClick={this.handleNodeClick.bind(this)}
+                  lastChanged={this.state.answer_data_last_changed} />
               </div>
-            }
             </div>
             </Sidebar.Pusher>
           </Sidebar.Pushable>
-        }
+
+
+          <Modal
+            header='Examples of questions'
+            centered={false}
+            content={
+              <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
+                <List link >
+                  {this.queryEx.map((ex, index) =>
+                    <List.Item as='a' key={index} onClick={this.handleExItemClick}
+                      style={{ color: 'black', fontSize: 15, margin: 5 }}>{ex}</List.Item>
+                  )
+                  }
+                </List>
+              </div>
+            }
+            open={this.state.examplesOpen}
+            onClose={() => this.setState({ examplesOpen: false })}
+            closeOnDimmerClick={true}
+            closeOnEscape={true}
+            actions={[{ key: 'close', content: 'Close', }]}
+          />
       </div>
     );
   }
