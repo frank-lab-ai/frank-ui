@@ -661,7 +661,7 @@ class Home extends Component {
                   border: 'none', color: '#000', minHeight: 50, overflow:'hidden !important'
                 }}>
                   <Segment raised style={{marginTop:70, marginLeft:15, height:"80vh", marginRight:10,
-                    overflowX:'hidden', overflowY:'scroll'}}>
+                    overflowX:'hidden', overflowY:'auto'}}>
 
                   <Button color='white' onClick={()=>this.setState({sidebarVisible: false})} icon='angle left' content='Hide'
                     style={{borderRadius:0, marginTop:'-10px', background: 'transparent', paddingLeft: 0}} /> 
