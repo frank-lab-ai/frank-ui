@@ -6,6 +6,11 @@ import ReactFlow, {
   Controls,
   Background,
 } from 'react-flow-renderer';
+import CustomFlowFnode from './CustomFlowFnode';
+
+const nodeTypes = {
+  fnode: CustomFlowFnode,
+};
 
 class InferenceFlowGraph extends Component {
   constructor() {
@@ -20,14 +25,14 @@ class InferenceFlowGraph extends Component {
      this.setState({data: this.props.data})
   }
 
-  componentWillReceiveProps(nextProps) {
-    
-    if(nextProps.lastChanged !== this.props.lastChanged)
+  componentDidUpdate(prevProps){
+
+    if(prevProps.lastChanged !== this.props.lastChanged){
         this.setState({data: this.props.data})
+      }
   }
 
   onLoad = (reactFlowInstance) => {
-    // console.log('flow loaded:', reactFlowInstance);
     reactFlowInstance.fitView();
   };
 
@@ -58,6 +63,7 @@ class InferenceFlowGraph extends Component {
             onElementClick={this.onElementClick.bind(this)}
             onConnect={this.onConnect.bind(this)}
             onLoad={this.onLoad.bind(this)}
+            nodeTypes={nodeTypes}
             snapToGrid={true}
             snapGrid={[15, 15]}
           >
@@ -68,12 +74,12 @@ class InferenceFlowGraph extends Component {
                 if (n.type === 'output') return '#ff0072';
                 if (n.type === 'default') return '#1a192b';
 
-                return '#eee';
+                return '#555';
               }}
               nodeColor={(n) => {
                 // if (n.style?.background) return n.style.background;
 
-                return '#fff';
+                return '#eee';
               }}
               nodeBorderRadius={2}
             />

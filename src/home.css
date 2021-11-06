@@ -33,3 +33,28 @@
     left: auto;
     bottom: auto
 }
+
+.react-flow{
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+}
+
+.react-flow__node-default, .react-flow__node-input, .react-flow__node-output{
+  font-size: 10px;
+}
+
+.header_logo_name{
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  font-size: 16px;
+  font-weight: 300;
+  color: #e78529;
+}
+
+.header_item{
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase !important;
+  font-size: 12px;
+  font-weight: 200;
+  color: rgb(0, 55, 65);
+}

@@ -49,6 +49,7 @@ class Home extends Component {
       ancestorBlanketLength: 1, descendantBlanketLength:1, explanation:{what:'', how:'', why:'', sources:''}, traceOpen:false,
       plotData:{}, questionView:false, inferenceGraphView:true, sidebarVisible: true, cy: null,
       nlView: true, editorFnode:'{"h":"value"}', autorefresh_graph:true,
+      answer_data_last_changed:new Date().getTime(),
       defaultContext:[
         {},
         {
@@ -57,34 +58,23 @@ class Home extends Component {
           // datetime:'2020-09-05 00:00:00'
         },
         {}
-      ]
-      // plotData: {
-      //   "p": "population",
-      //   "fp": "{\"function\" :[-5.2617682627407867E8,294139.066666669], \"data\":[[2017.0, 6.7118648E7],[2016.0, 6.6706879333333336E7],[2015.0, 6.6486984E7],[2014.0, 6.6316092E7],[2013.0, 6.5969263E7],[2012.0, 6.56546795E7],[2011.0, 6.53431815E7],[2010.0, 6.50253245E7],[2009.0, 6.47049825E7]]}",
-      //   "h": "regress", "o": "?y0", "v": "?y0", "t": "2026", "id": "102", "s": "France",
-      //   "xp": " The predicted population value using a regression function based on values from past years is 6.97489227925927E7."
-      // },      
+      ]   
     }
 
     this.templates = [];
     this.queryEx = [
       "What was the gdp of Ghana in 1998?",
-      "What will be the population of France in 2026?",
+      "What is the population of France in 2026?",
       "What is the capital of the United Kingdom?",
       "What was the population in 2005 of the country in Europe with the highest gdp in 2010?",
       "country with the largest population in 1998",
       "country in Europe with the lowest population in 2010"
     ]
-    console.log(`server: ${config.frank_server_host}`)
     this.frank_api_endpoint = `http://${config.frank_server_host}:${config.frank_server_port}`;
     this.timer = this.timer.bind(this);
   }
 
   componentDidMount() {
-    // navigator.geolocation.getCurrentPosition(function(position) {
-    //   console.log("Latitude is :", position.coords.latitude);
-    //   console.log("Longitude is :", position.coords.longitude);
-    // });
   }
 
   handleAccordionClick = (e, titleProps) => {
@@ -118,26 +108,18 @@ class Home extends Component {
 
   handleExItemClick = (e, listItemProps) => {
     const { children } = listItemProps
-    // console.log(children)
     this.setState({ query: children, activeIndex: 10, examplesOpen: false }) //change active index to close accordion
     this.getQueryFnode(children)
   }
 
   getQueryFnode(queryStr) {
     if (queryStr.trim().length === 0) return;
-    //var queryStr = this.state.query
-    //if(queryStr[queryStr.length-1] === ' ' || queryStr[queryStr.length-1] === '?'){    
-    // console.log("generating")
-    //generate the templates  
     fetch(this.frank_api_endpoint + '/template/' + queryStr, {})
       .then(result => result.json())
       .then(response => this.updateFnodeAndTemplates(response))
       .catch(err => this.setState({ currentCount: 0, isError: true, errorMessage: "Sorry. The FRANK reasoner is currently offline.", loading: false }))
     //}
   }
-
-
-
 
   handleQuery(isFnodeEditor) {
     if (isFnodeEditor){
@@ -166,7 +148,11 @@ class Home extends Component {
         body: JSON.stringify({ fnode: fnode, sessionId: sessionId, question: this.state.query })
       })
         .then(response => response.json())
-        .then(result => this.displayAnswer(result))
+        .then(result => {
+          this.displayAnswer(result);
+          this.checkForAnswer();
+          }
+        )
         .catch(err => this.setState({ currentCount: 0, isError: true, errorMessage: "Sorry. FRANK's reasoner is currently offline.", loading: false }))
 
       //check for answer at timer intervals
@@ -202,7 +188,6 @@ class Home extends Component {
 
 
   updateFnodeAndTemplates(data) {
-    // console.log(data)
     this.setState({ template: data['template'], fnode: data['fnode'], fnode_string: data['fnode_string'], 
       question: data['question'], editorFnode: JSON.stringify(data['fnode'], null, 2), isError: false })
   }
@@ -210,9 +195,7 @@ class Home extends Component {
   displayAnswer(data) {
     if (data.answer !== undefined && data.answer !== null) {
       clearInterval(this.state.intervalId);  // stop timer for checks
-      var today = new Date();
-      var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-      this.setState({ answer: data, final_answer_returned: true, loading: false, isError: false, answer_data_last_changed:time })
+      this.setState({ answer: data, final_answer_returned: true, loading: false, isError: false, answer_data_last_changed:new Date().getTime() })
     }
   }
 
@@ -312,9 +295,11 @@ class Home extends Component {
                 background:'#FFFFFF', zIndex: 9909,
                 position: 'absolute', width:'100%'}}>
           <Menu.Item header>
-              <Header as='h1' style={{color:'#c1d2e1'}}>
-                <Image src={require('./../frank-logo.png')} centered style={{width: 90}}/>
-              </Header>
+              {/* <Header as='h1' style={{color:'#c1d2e1'}}> */}
+                {/* <Image src={require('./../frank-logo.png')} centered style={{width: 90}}/> */}
+                
+              {/* </Header> */}
+              <div className='header_logo_name'><span style={{color:'#000', fontWeight:300}}>Deep</span> FRANK</div>
           </Menu.Item>
           <Menu.Item>
               <Header.Subheader  style={{color:'#2D3142', paddingBottom:10}}>
@@ -326,17 +311,20 @@ class Home extends Component {
                   </div>               
                 </span> */}
                 </Header.Subheader>
-              {this.state.inferenceGraphView && (this.state.loadingSelectedFnode || this.state.loading) &&
-                  <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px', marginLeft: 10 }} />
-              }  
+              
           </Menu.Item>
           
           {this.state.inferenceGraphView &&
             <Menu.Menu stackable secondary position='right' >
+              <Menu.Item>
+              {this.state.inferenceGraphView && (this.state.loadingSelectedFnode || this.state.loading) &&
+                  <Image src='loading.svg' size='mini' style={{ float: 'left', objectFit: 'cover', height: '20px', marginLeft: 10 }} />
+              }  
+              </Menu.Item>
                 <Popup
                   wide
                   trigger={
-                    <Menu.Item  onClick={() => {this.setState({ examplesOpen: true }); console.log("examples")}}>
+                    <Menu.Item className="header_item"  onClick={() => {this.setState({ examplesOpen: true })}}>
                       Examples
                     </Menu.Item>}
                     content={
@@ -355,18 +343,15 @@ class Home extends Component {
                   mouseLeaveDelay={1000}
                   style={{zIndex:9999}}
                 />
-              {/* <Menu.Item  onClick={() => {this.setState({ examplesOpen: true }); console.log("examples")}}>
-                Examples
-              </Menu.Item> */}
-              <Menu.Item  onClick={()=>{this.checkForAnswer(); this.setState({answer_data_last_changed:new Date().getSeconds()})} } >
+              <Menu.Item className="header_item" onClick={()=>{this.checkForAnswer(); this.setState({answer_data_last_changed:new Date().getTime()})} } >
                 <Icon name='refresh' />
                 Refresh
               </Menu.Item>
-              {this.state.cy !== null &&
+              {/* {this.state.cy !== null &&
               <Menu.Item  onClick={()=>this.handleDownloadInferenceGraph()} >
                 <Icon name='download' />
               </Menu.Item>
-              }
+              } */}
             </Menu.Menu>
           }
           
@@ -394,10 +379,10 @@ class Home extends Component {
           /> */}
 
         {!this.state.sidebarVisible &&
-        <Button size='tiny' color='black' style={{position:'absolute', top:70, left: 20, zIndex:2, borderRadius:20}}
+        <Button size='tiny' style={{position:'absolute', top:70, left: 20, zIndex:2, borderRadius:20, background:'#2D3142', color:'#FFF'}}
           onClick={()=>this.setState({sidebarVisible: true})}>
             <Icon rotated='counterclockwise' name='window maximize outline' />
-          View Query
+            View Query
         </Button>
         }
         
@@ -418,7 +403,7 @@ class Home extends Component {
                   borderRadius: '0px', paddingLeft: '10px', marginTop: 0, marginBottom: 0,
                   border: 'none', color: '#000', minHeight: 50, overflow:'hidden !important'
                 }}>
-                  <Segment raised style={{marginTop:70, marginLeft:15, padding:0, maxHeight:"80vh", marginRight:10,
+                  <Segment raised style={{marginTop:70, marginLeft:10, padding:0, maxHeight:"80vh", marginRight:10,
                     overflowX:'hidden', overflowY:'auto'}}>
                   <div style={{background: '#2D3142', width:'100%', padding:10}}>
                     <Button color='black' onClick={()=>this.setState({sidebarVisible: false})} icon='angle left' content='Hide'
@@ -462,7 +447,7 @@ class Home extends Component {
                                   <div style={{ background: '#404353', padding: 10, paddingTop: 20, marginTop: '-14px' }}>
 
                                   
-                                    <p style={{ fontSize: 13, fontWeight: '500', color: '#A9BAC9' }}>
+                                    <p className='header_item' style={{ fontSize: 11, fontWeight: '400', color: '#A9BAC9' }}>
                                       Generated Query
                                     <Popup inverted trigger={
                                         <Icon size='large' color='orange' name='question circle' style={{ marginTop: '-5px', marginLeft: '5px' }} />
@@ -549,7 +534,7 @@ class Home extends Component {
                           <Image src='loading.svg' centered size='mini' style={{ objectFit: 'cover', height: '10px', float: 'right' }} />
                         }
                         <div>
-                          <div style={{ fontSize: 13, marginBottom: 0, marginTop: 0, color:'#555' }} >
+                          <div className='header_item' style={{ fontSize: 12, fontWeight: 400, marginBottom: 0, marginTop: 0, color:'#555' }} >
                             {/* {this.state.questionAnswered} */}
                             Answer:
                           </div>
@@ -616,41 +601,6 @@ class Home extends Component {
 
                     {(this.state.currentCount > 0) &&
                       <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
-                        {/* <Button basic color='white' icon='sitemap' content='Inference Graph'
-                          style={{borderRadius:0, background:'transparent'}}
-                          onClick={()=>{this.setState({inferenceGraphView:true, questionView:false, fnode_node: {}, 
-                                    explanation:{all:'', what:'', how:'', why:'',sources:''}, loadingSelectedFnode: false}, ()=>this.checkForAnswer())}
-                          }>
-                        </Button> */}
-                                    
-
-                        {/* <Modal
-                          trigger={<Button basic color='white' icon='align left' content='Trace'
-                                      style={{borderRadius:0, background:'transparent'}} onClick={()=>this.setState({traceOpen:true})}></Button>}
-                          centered={false}
-                          open={this.state.traceOpen}
-                          onClose={() => this.setState({ traceOpen: false })}
-                          closeOnDimmerClick={true}
-                          closeOnEscape={true}
-                          size='fullscreen' dimmer='blurring'
-                        >
-                          <Modal.Header>Inference Trace</Modal.Header>
-                          <Modal.Content scrolling>
-                            <div style={{ borderRadius: '0px', padding: '20px', border: 'none' }}>
-                              <List divided relaxed size='tiny'>
-                                  {isNullOrUndefined(this.state.answer.trace) === false ?
-                                    this.state.answer.trace.map((item, index) => { return <List.Item key={index} >{item}</List.Item> })
-                                    : ""}
-                              </List>
-                            </div>
-                          </Modal.Content>
-                          <Modal.Actions>
-                            <Button onClick={() => this.setState({ traceOpen: false })}>
-                              Close
-                            </Button>
-                          </Modal.Actions>
-                        </Modal> */}
-
                       </div>
                     }
                     {this.state.loading && !this.state.final_answer_returned && !this.state.intermediate_answer_returned &&
@@ -674,7 +624,7 @@ class Home extends Component {
               </div>
                   {/* end of query bar */}
 
-                  {Object.keys(this.state.fnode_node).length > 0 && this.state.answer.graph !== undefined &&
+                  {/* {Object.keys(this.state.fnode_node).length > 0 && this.state.answer.graph !== undefined &&
                   <div style={{paddingTop: 10, margin: 10, marginLeft: 15, marginBottom:15}}>
                     <div  style={{marginLeft: 0, paddingTop:0, paddingBottom:10}}>Explanation Blanket Lengths:</div>
                     <div>
@@ -686,7 +636,7 @@ class Home extends Component {
                       <div style={{clear:'both'}} />
                     </div>
                   </div>
-                  }  
+                  }   */}
 
                   <div style={{ clear: 'both' }} />
                       {this.state.loadingSelectedFnode &&
@@ -695,14 +645,13 @@ class Home extends Component {
   
                       {!this.state.loadingSelectedFnode && this.state.fnode_node &&
                         <div style={{margin:0}}> 
-                          <div>
+                          {/* <div>
                             { (this.state.explanation.what.length > 0 || this.state.explanation.how.length > 0 || 
                                this.state.explanation.why.length > 0 || this.state.explanation.sources.length > 0 ) &&
                               <span style={{fontWeight: 600}}>Explanation: </span>
                             }
                             {this.state.explanation.what.length > 0 &&
-                              <span>{this.state.explanation.what}</span>
-                            }
+                             <span>{this.state.explanation.what}</span>x
                             {this.state.explanation.why.length > 0 &&
                               <span>{' WHY: ' + this.state.explanation.why}</span>
                             } 
@@ -713,7 +662,7 @@ class Home extends Component {
                               <span>{' ' + this.state.explanation.sources}</span>
                             } 
                             
-                          </div>
+                          </div> */}
                           
                           <div style={{clear:'both', marginTop:0}} />
                           {!this.state.loadingSelectedFnode && this.state.fnode_node.h === "regress" && 
@@ -721,9 +670,9 @@ class Home extends Component {
                           }
                           {Object.keys(this.state.fnode_node).length > 0 &&
                             <div>
-                              <div style={{fontWeight: 500, marginTop:30, marginLeft:15}}>Selected node</div>
-                              <ReactJson src={this.state.fnode_node} theme='shapeshifter:inverted'
-                                displayDataTypes={false} displayObjectSize={false} name={false} collapsed={false}
+                              <div className='header_item' style={{fontSize:12, fontWeight:400, marginTop:30, marginLeft:12}}>Selected node</div>
+                              <ReactJson src={this.state.fnode_node} theme='shapeshifter:inverted'  
+                                displayDataTypes={false} displayObjectSize={false} name={false} collapsed={1} 
                                 style={{ padding: 10, background: '#FFF', fontSize: 11 }} />
                             </div>
                           }
@@ -734,10 +683,8 @@ class Home extends Component {
               </div>
             </Sidebar>
             <Sidebar.Pusher>
-            <div>
-              
+            <div>              
               <div style={{background: '#FFF', position:'absolute', bottom:0, width:'100%'}}>
-
                 <InferenceFlowGraph data={this.state.answer.graph} 
                   handleNodeClick={this.handleNodeClick.bind(this)}
                   lastChanged={this.state.answer_data_last_changed} />
