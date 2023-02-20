@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="200mm"
+   height="200mm"
+   viewBox="0 0 200 200"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="deepfrank.svg"
+   inkscape:export-filename="/home/kobby/projects/frank/frank-ui/public/images/logo/deepfrank.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="152.99948"
+     inkscape:cy="421.6274"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:pagecheckerboard="true"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-width="1920"
+     inkscape:window-height="1173"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1">
+    <sodipodi:guide
+       position="99.785714,127"
+       orientation="1,0"
+       id="guide829"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="-54.806547,104.32143"
+       orientation="0,1"
+       id="guide880"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="40.065476,18.142857"
+       orientation="0,1"
+       id="guide882"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="6.8035714,182.18452"
+       orientation="0,1"
+       id="guide884"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="37.797619,33.639881"
+       orientation="0,1"
+       id="guide886"
+       inkscape:locked="false" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-97)">
+    <ellipse
+       style="fill:#112233;fill-opacity:1;stroke:none;stroke-width:0.0843637;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+       id="path815"
+       cx="100"
+       cy="189.59164"
+       rx="100"
+       ry="74.675598" />
+    <path
+       style="fill:#112233;fill-opacity:1;stroke:none;stroke-width:0.26128626px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 132.29167,259.9387 c 0,0 49.7146,-4.66868 59.72024,24.00676 3.16506,9.07082 -6.04763,-64.65736 -6.04763,-64.65736 v 0 z"
+       id="path821"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="csccc" />
+    <ellipse
+       style="fill:#d46e00;fill-opacity:1;stroke:none;stroke-width:0.06052043;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+       id="path827"
+       cx="99.889366"
+       cy="190.03267"
+       rx="28.936609"
+       ry="29.860117" />
+    <circle
+       style="fill:#d46e00;fill-opacity:1;stroke:none;stroke-width:0.0358097;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+       id="path827-7"
+       cx="40.418507"
+       cy="190.70992"
+       r="17.392748" />
+    <circle
+       style="fill:#d46e00;fill-opacity:1;stroke:none;stroke-width:0.0358097;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+       id="path827-7-6"
+       cx="160.13557"
+       cy="190.64835"
+       r="17.392748" />
+  </g>
+</svg>

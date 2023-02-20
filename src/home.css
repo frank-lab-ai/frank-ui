@@ -26,12 +26,12 @@
 } */
 
 .react-flow__controls {
-    top: 60px;
-    right: 15px;
-    position: absolute;
-    z-index: 5;
-    left: auto;
-    bottom: auto
+    top: 60px !important; 
+    right: 15px !important;
+    position: absolute !important;
+    z-index: 5 !important;
+    left: auto !important;
+    bottom: auto !important;
 }
 
 .react-flow{
@@ -41,6 +41,18 @@
 
 .react-flow__node-default, .react-flow__node-input, .react-flow__node-output{
   font-size: 10px;
+}
+
+.react-flow__node-input.selected, .react-flow__node-input.selected:hover  {
+  box-shadow: 0 0 0 5px #ff5e0080;
+}
+
+.react-flow__node-output.selected, .react-flow__node-output.selected:hover  {
+  box-shadow: 0 0 0 5px #00a50080;
+}
+
+.react-flow__node-default.selected, .react-flow__node-default.selected:hover {
+  box-shadow: 0 0 0 5px #00000080 ;
 }
 
 .header_logo_name{
@@ -57,4 +69,9 @@
   font-size: 12px;
   font-weight: 200;
   color: rgb(0, 55, 65);
+}
+
+
+.ui.sidebar{
+  height: auto !important;
 }

@@ -13,6 +13,7 @@ import {config} from '../config'
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
 
+const CANCEL_COMMAND = 'cancel'
 
 const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
   const byteCharacters = atob(b64Data);
@@ -40,10 +41,10 @@ class Home extends Component {
     super();
     this.state = {
       query: '', templates: [], activeIndex: 10, fnode: {}, fnode_string: '',
-      answer: {}, loading: false, final_answer_returned: false, intermediate_answer_returned: false, errorMessage: '', 
+      answer: {}, loading: false, final_answer_returned: false, errorMessage: '', 
       examplesOpen: false, sessionId: '',
       currentCount: 0, intervalId: null, timedOut: false,
-      maxCheckAttempts: 600, // 600 attempts with 3 seconds intervals = 30 hour before UI timeout. 
+      maxCheckAttempts: 600, // 600 attempts with 3 seconds intervals = 30 hours before UI timeout. 
       answerCheckInterval: 3000, //3 seconds
       questionAnswered: '', fnode_node: {}, loadingSelectedFnode: false,
       ancestorBlanketLength: 1, descendantBlanketLength:1, explanation:{what:'', how:'', why:'', sources:''}, traceOpen:false,
@@ -58,7 +59,9 @@ class Home extends Component {
           // datetime:'2020-09-05 00:00:00'
         },
         {}
-      ]   
+      ],
+      edits:{},
+      collapse_query_json: true,
     }
 
     this.templates = [];
@@ -86,7 +89,7 @@ class Home extends Component {
   }
 
   handleChangeQuery(e) {
-    this.setState({ errorMessage: "" })
+    this.setState({ errorMessage: "", collapse_query_json:false })
     var queryStr = e.target.value
     this.setState({ query: queryStr, isError: false })
     if (queryStr.trim().length === 0)
@@ -136,7 +139,7 @@ class Home extends Component {
       currentCount: this.state.maxCheckAttempts, timedOut: false, isError: false, 
       questionAnswered: isFnodeEditor? this.state.editorFnode : this.state.query, 
       fnode_node: {},
-      loadingSelectedFnode: false
+      loadingSelectedFnode: false, collapse_query_json:true
     }, () => {
       const { fnode } = this.state
       if(!('cx' in fnode)){
@@ -159,6 +162,46 @@ class Home extends Component {
       var intervalId = setInterval(this.timer, this.state.answerCheckInterval);
       this.setState({ intervalId: intervalId });
     })
+  }
+
+  handleRequery() {
+    // if (isFnodeEditor){
+    //   this.setState({query: this.state.editorFnode})
+    // }
+    // if (this.state.query.trim().length === 0) return;
+    // if (!Object.keys(this.state.fnode).length) {
+    //   this.setState({ isError: true, errorMessage: "FRANK was unable to parse your questions. Can you rephrase?" })
+    //   return;
+    // }
+    // const sessionId = this.generateQuickGuid()
+    this.setState({
+      loading: true, final_answer_returned: false, partial_answer_returned: false, answer: {},
+      currentCount: this.state.maxCheckAttempts, timedOut: false, isError: false, 
+      // questionAnswered: isFnodeEditor? this.state.editorFnode : this.state.query, 
+      fnode:{},
+      loadingSelectedFnode: false, collapse_query_json:true
+    }, () => {
+      const { fnode } = this.state
+      if(!('cx' in fnode)){
+        fnode['cx'] = this.state.defaultContext;
+      }
+      fetch(this.frank_api_endpoint + "/requery", {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ edits: this.state.edits, sessionId: this.state.sessionId })
+      })
+        .then(response => response.json())
+        .then(result => {
+          this.displayAnswer(result);
+          this.checkForAnswer();
+          }
+        )
+        .catch(err => this.setState({ currentCount: 0, isError: true, errorMessage: "Sorry. FRANK's reasoner is currently offline.", loading: false }))
+
+      //check for answer at timer intervals
+      var intervalId = setInterval(this.timer, this.state.answerCheckInterval);
+      this.setState({ intervalId: intervalId });
+    })
 
   }
 
@@ -168,6 +211,26 @@ class Home extends Component {
       .then(response => {
         this.displayProgressTrace(response)
       })
+      .catch(error => {
+        console.log("checkForAnswer() error: " + error);
+        clearInterval(this.state.intervalId);
+        this.setState({isError: true, errorMessage: "FRANK server cannot be reached", loading:false, loadingSelectedFnode:false})
+      })
+  }
+
+  send_command(command) {
+    fetch(this.frank_api_endpoint + '/send_command/' + this.state.sessionId + '/' + command,  {})
+      .then(result => result.json())
+      .then(response => {
+        console.log(response)
+        clearInterval(this.state.intervalId);
+        this.setState({isError: true, errorMessage: "Inference session cancelled.", loading:false, loadingSelectedFnode:false})
+      })
+      .catch(error => console.log("sendCommand() error: " + error))
+  }
+
+  send_cancel_command(){
+    this.send_command(CANCEL_COMMAND)
   }
 
   timer = () => {
@@ -202,11 +265,19 @@ class Home extends Component {
   displayProgressTrace(data) {
     var answer = this.state.answer;
     if (data.answer !== undefined && data.answer !== null){
+      answer = data.answer;
+      answer.trace = data.trace;
+    }
+    else if (data.partial_answer !== undefined && data.partial_answer !== null){
       answer = data.partial_answer;
       answer.trace = data.trace;
     }
     answer.graph = data.graph
     var isFinal = data.answer !== undefined && data.answer !== null && data.answer.answer.length > 0
+    var isPartial = false
+    if (!isFinal){
+      isPartial = data.partial_answer !== undefined && data.partial_answer !== null && data.partial_answer.answer.length > 0
+    }
     if (isFinal)
       clearInterval(this.state.intervalId)
     var isError = this.state.isError
@@ -223,19 +294,20 @@ class Home extends Component {
       final_answer_returned: isFinal,
       loading: !isFinal,
       isError: false,
-      partial_answer_returned: !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.fnode),
+      partial_answer_returned: isPartial, // !isNullOrUndefined(data.partial_answer) && !isNullOrUndefined(data.partial_answer.fnode),
       answer_data_last_changed:answer_last_changed
     })
     
   }
 
   handleNodeClick(nodeId) {
-    this.setState({ loadingSelectedFnode: true })
+    this.setState({ loadingSelectedFnode: true, edits:{} })
     fetch(`${this.frank_api_endpoint}/fnode/${this.state.sessionId}/${nodeId}/blanketlengths/${this.state.ancestorBlanketLength}/${this.state.descendantBlanketLength}`, {})
       .then(result => result.json())
       .then(response => {
         this.setState({ fnode_node: response.fnode, explanation: response.explanation, loadingSelectedFnode: false, sidebarVisible:true })
       })
+      .catch(error => console.log("nodeClick() error : " + error))
   }
 
   handleUpdateCyObj(cyObj){
@@ -277,6 +349,15 @@ class Home extends Component {
     this.setState({editorFnode:newValue, fnode:fnode})
   }
 
+  onJsonEdit(obj){
+    var edits = this.state.edits;
+    edits.id = obj.existing_src.id
+    edits[obj.name] = {'attr': obj.name, 'old': obj.existing_value, 'new':obj.new_value}
+    console.log(edits)
+    console.log(obj)
+    this.setState({edits})
+  }
+
   
 
   render() {
@@ -296,10 +377,10 @@ class Home extends Component {
                 position: 'absolute', width:'100%'}}>
           <Menu.Item header>
               {/* <Header as='h1' style={{color:'#c1d2e1'}}> */}
-                {/* <Image src={require('./../frank-logo.png')} centered style={{width: 90}}/> */}
+                <Image src={require('./../logo/deepfrank_small.png')} centered style={{width: 30, marginRight:10}}/>
                 
               {/* </Header> */}
-              <div className='header_logo_name'><span style={{color:'#000', fontWeight:300}}>Deep</span> FRANK</div>
+              <div className='header_logo_name'><span style={{color:'#000', fontWeight:300, marginRight:5}}>Deep</span>FRANK</div>
           </Menu.Item>
           <Menu.Item>
               <Header.Subheader  style={{color:'#2D3142', paddingBottom:10}}>
@@ -395,15 +476,15 @@ class Home extends Component {
               direction='left'
               visible={this.state.sidebarVisible}
               width='very wide'
-              style={{borderWidth:0, margin:0, borderRadius:0, width:540, position:'absolute', bottom:0,
-                 paddingBottom:65, background:'rgb(0,0,0,0)', overflow:'hidden !important', boxShadow: 'unset'}}
+              style={{borderWidth:0, margin:0, borderRadius:0, width:540, position:'absolute', height:'auto!important',
+                 background:'rgb(0,0,0,0)', overflow:'hidden !important', boxShadow: 'unset'}}
             >
     
               <div style={{
                   borderRadius: '0px', paddingLeft: '10px', marginTop: 0, marginBottom: 0,
                   border: 'none', color: '#000', minHeight: 50, overflow:'hidden !important'
                 }}>
-                  <Segment raised style={{marginTop:70, marginLeft:10, padding:0, maxHeight:"80vh", marginRight:10,
+                  <Segment raised style={{marginTop:70, marginLeft:10, padding:0, maxHeight:"85vh", marginRight:10,
                     overflowX:'hidden', overflowY:'auto'}}>
                   <div style={{background: '#2D3142', width:'100%', padding:10}}>
                     <Button color='black' onClick={()=>this.setState({sidebarVisible: false})} icon='angle left' content='Hide'
@@ -466,7 +547,7 @@ class Home extends Component {
                                       />:
                                   </p>
                                     <ReactJson src={this.state.fnode} theme='monokai'
-                                      displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
+                                      displayDataTypes={false} displayObjectSize={false} name={false} collapsed={this.state.collapse_query_json}
                                       style={{ padding: 5, background: '#404353', fontSize: 11 }} />
                                   </div>
                                 </div>
@@ -514,7 +595,7 @@ class Home extends Component {
                     </div>
                   </Segment>
                   
-                  {(this.state.final_answer_returned || this.state.intermediate_answer_returned || this.state.isError || this.state.loading) &&
+                  {(this.state.final_answer_returned || this.state.partial_answer_returned || this.state.isError || this.state.loading) &&
                   <Segment basic style={{ marginLeft: '0px', paddingTop: '0px', marginRight: '0px', marginTop: '0px', width: '100%' }}>
                     <div style={{ clear: 'both' }} />
                     {this.state.isError &&
@@ -525,7 +606,7 @@ class Home extends Component {
                         <span style={{ fontSize: 13 }}> <Icon name='exclamation triangle' color='yellow' size='large' /> {this.state.errorMessage} </span>
                       </div>
                     }
-                    {(this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
+                    {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
                       <Segment style={{
                         borderRadius: '0px', paddingLeft: '20px', paddingBottom: 0,
                         background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
@@ -535,8 +616,12 @@ class Home extends Component {
                         }
                         <div>
                           <div className='header_item' style={{ fontSize: 12, fontWeight: 400, marginBottom: 0, marginTop: 0, color:'#555' }} >
-                            {/* {this.state.questionAnswered} */}
-                            Answer:
+                            {this.state.final_answer_returned && 
+                              <span>Answer</span>
+                            }
+                            {this.state.partial_answer_returned && 
+                              <span>Intermediate Answer</span>
+                            }
                           </div>
                           <Statistic style={{ float: 'left', marginRight: '30px', marginTop: '10px', marginBottom: 10, fontSize: '10px' }}>
                             <div style={{ fontSize: 25, fontWeight: '400' }} >{this.state.answer.answer}</div>
@@ -559,18 +644,18 @@ class Home extends Component {
                           <Icon name='hourglass end' />Time:
                           <Label.Detail style={{marginLeft: 3}}>{this.state.answer.elapsed_time}</Label.Detail>
                         </Label>
-                        <div>
+                        {/* <div>
                           <div style={{marginBottom: 0, marginTop: 10, marginRight: 5, fontWeight: 600, fontSize: 12, float: "left", color: "#444" }}>Answer Fnode</div>
                           <ReactJson src={this.state.answer.fnode} theme='shapeshifter:inverted'
                             displayDataTypes={false} displayObjectSize={false} name={false} collapsed={true}
                             style={{marginBottom: 20, marginTop: 10,  background: '#FFF', fontSize: 11, float: "left" }} />
                           <div style={{clear: "both"}} />
-                        </div>
+                        </div> */}
                       </Segment>
                       
                     }
 
-                  {/* {(this.state.final_answer_returned || this.state.intermediate_answer_returned) &&
+                  {/* {(this.state.final_answer_returned || this.state.partial_answer_returned) &&
                       <Segment style={{
                         borderRadius: '0px', paddingLeft: '20px', paddingBottom: 20,
                         background: '#fff', border: 'none', color: 'black', maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto'
@@ -603,8 +688,11 @@ class Home extends Component {
                       <div style={{maxWidth: '1000px', marginLeft: 'auto', marginRight: 'auto', marginTop:20}}>
                       </div>
                     }
-                    {this.state.loading && !this.state.final_answer_returned && !this.state.intermediate_answer_returned &&
+                    {this.state.loading && !this.state.final_answer_returned && !this.state.partial_answer_returned &&
+                      <div style={{width:'100%', textAlign:'center'}}>
                       <Image src='loading.svg' centered size='mini' />
+                      <Button basic size='mini' style={{padding:5}} onClick={()=>this.send_cancel_command()}>Cancel</Button>
+                      </div>
                     }
 
                     {!this.state.final_answer_returned && this.state.timedOut && !this.state.isError &&
@@ -670,9 +758,15 @@ class Home extends Component {
                           }
                           {Object.keys(this.state.fnode_node).length > 0 &&
                             <div>
-                              <div className='header_item' style={{fontSize:12, fontWeight:400, marginTop:30, marginLeft:12}}>Selected node</div>
+                              <div className='header_item' style={{fontSize:12, fontWeight:400, marginTop:30, marginLeft:12}}>Selected node
+                              {Object.keys(this.state.edits).length > 0 && 
+                                <Button basic size='tiny' style={{pading:4, marginLeft:20}} 
+                                        onClick={this.handleRequery.bind(this)}>Apply Changes</Button>
+                              }
+                              </div>
                               <ReactJson src={this.state.fnode_node} theme='shapeshifter:inverted'  
-                                displayDataTypes={false} displayObjectSize={false} name={false} collapsed={1} 
+                                displayDataTypes={false} displayObjectSize={false} name={false} collapsed={1}
+                                onEdit={this.onJsonEdit.bind(this)}
                                 style={{ padding: 10, background: '#FFF', fontSize: 11 }} />
                             </div>
                           }

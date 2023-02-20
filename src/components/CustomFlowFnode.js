@@ -20,7 +20,7 @@ export default memo(({ data, isConnectable }) => {
         type="source"
         position="bottom"
         id="a"
-        style={{ top: 10, background: '#555' }}
+        style={{ background: '#555' }}
         isConnectable={isConnectable}
       />
     </div>
